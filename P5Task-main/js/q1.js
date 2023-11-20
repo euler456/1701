@@ -10,7 +10,7 @@ function draw() {
     ellipse(240, 325, 80, 50);
     ellipse(160, 325, 80, 50);
     //left hand
-    fill('#0294A5');
+    fill('blue');
     ellipse(145, 230, 70, 80);
     //tail
     strokeWeight(3);
@@ -18,11 +18,11 @@ function draw() {
     strokeWeight(1);
 
     //red spot
-    fill(255, 0, 0);
+    fill('red');
     ellipse(110, 280, 30, 30);
     
     // Doraemon's body
-    fill('#0294A5');
+    fill('blue');
     beginShape();
     curveVertex(140, 200);
     curveVertex(140, 320);
@@ -59,7 +59,7 @@ function draw() {
     arc(x, y, radius * 2, radius * 2, startAngle, endAngle);
     line(170,240,230,240)
     // Doraemon's face
-    fill('#0294A5'); 
+    fill('blue'); 
     ellipse(200, 100, 200, 200);
     fill(255);
     ellipse(200, 120, 170, 160);
@@ -77,7 +77,7 @@ function draw() {
     ellipse(190, 43, 5, 5);
     ellipse(210, 43, 5, 5);
     // Doraemon's nose
-    fill('#E44D26'); // Red color for Doraemon's nose
+    fill('red'); // Red color for Doraemon's nose
     ellipse(200, 65, 20, 20);
   
     // Doraemon's mouth
