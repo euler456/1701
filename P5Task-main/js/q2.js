@@ -1,6 +1,6 @@
 let comedyCount = 4;
 let actionCount = 5;
-let romanceCount = 6;
+let romanceCount = 15;
 let dramaCount = 11;
 let sciFiCount = 8;
 
