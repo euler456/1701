@@ -3,15 +3,12 @@ let moonSize = 20;
 let moon1Angle = 0;
 let moon2Angle = 0;
 let moon3Angle = 0;
-let moon1RadiusX = moonSize * 7; // X-axis radius for moon1
-let moon1RadiusY = moonSize * 2.5; // Y-axis radius for moon1
-let moon2RadiusX = moonSize * 2.5; // X-axis radius for moon2
-let moon2RadiusY = moonSize * 7; // Y-axis radius for moon2
-let moon3Radius = moonSize * 1.5; // Radius for moon3
+let moon1RadiusX, moon1RadiusY, moon2RadiusX, moon2RadiusY, moon3Radius;
 let planetColorBright, planetColorDark;
 let moon1Color, moon2Color, moon3Color;
 let centralCircleColor;
 
+let moon1Speed, moon2Speed, moon3Speed;
 let moon1Stopped = false;
 let moon2Stopped = false;
 let moon3Stopped = false;
@@ -20,12 +17,22 @@ let moon1X, moon1Y, moon2X, moon2Y, moon3X, moon3Y; // Declare these globally
 
 function setup() {
   createCanvas(400, 400);
+  moon1RadiusX = moonSize * 7; 
+  moon1RadiusY = moonSize * 2.5; 
+  moon2RadiusX = moonSize * 2.5; 
+  moon2RadiusY = moonSize * 7; 
+  moon3Radius = moonSize * 1.5; 
+
   planetColorBright = color(255, 255, 255);
   planetColorDark = color(100, 100, 100);
   moon1Color = color(255, 255, 0);
   moon2Color = color(255);
   moon3Color = color(255, 0, 0);
   centralCircleColor = moon2Color;
+
+  moon1Speed = radians(1.5);
+  moon2Speed = radians(2);
+  moon3Speed = radians(2);
 }
 
 function draw() {
@@ -90,22 +97,14 @@ function draw() {
 
   // Update angles for animation
   if (!moon1Stopped) {
-    moon1Angle += radians(1.5);
+    moon1Angle += moon1Speed;
   }
   if (!moon2Stopped) {
-    moon2Angle += radians(2);
+    moon2Angle += moon2Speed;
   }
   if (!moon3Stopped) {
-    moon3Angle += radians(2);
+    moon3Angle += moon3Speed;
   }
-}
-
-function mouseMoved() {
-  let closestMoon = findClosestMoon(mouseX, mouseY);
-
-  moon1Stopped = closestMoon === 'moon1' ? true : false;
-  moon2Stopped = closestMoon === 'moon2' ? true : false;
-  moon3Stopped = closestMoon === 'moon3' ? true : false;
 }
 
 function findClosestMoon(x, y) {
@@ -122,23 +121,27 @@ function findClosestMoon(x, y) {
   }
 }
 
-function mouseClicked() {
+function mouseMoved() {
+  let closestMoon = findClosestMoon(mouseX, mouseY);
+  moon1Stopped = closestMoon === 'moon1' && dist(mouseX, mouseY, moon1X, moon1Y) < moonSize / 2;
+  moon2Stopped = closestMoon === 'moon2' && dist(mouseX, mouseY, moon2X, moon2Y) < moonSize / 2;
+  moon3Stopped = closestMoon === 'moon3' && dist(mouseX, mouseY, moon3X, moon3Y) < moonSize / 2;
+}
+
+function mousePressed() {
   let d1 = dist(mouseX, mouseY, moon1X, moon1Y);
   let d2 = dist(mouseX, mouseY, moon2X, moon2Y);
   let d3 = dist(mouseX, mouseY, moon3X, moon3Y);
 
   if (d1 < moonSize / 2) {
-    let newSpeed = radians(random(0.05, 0.2));
-    moon1Angle += newSpeed;
+    moon1Speed = radians(random(0.05, 1));
   }
 
   if (d2 < moonSize / 2) {
-    let newSpeed = radians(random(0.05, 0.2));
-    moon2Angle += newSpeed;
+    moon2Speed = radians(random(0.05, 1));
   }
 
   if (d3 < moonSize / 2) {
-    let newSpeed = radians(random(0.05, 0.2));
-    moon3Angle += newSpeed;
+    moon3Speed = radians(random(0.05, 20));
   }
 }
