@@ -22,36 +22,31 @@ class Ralph {
     this.x = width / 4;
     this.y = height / 2;
     this.mouthOpen = false;
+    this.mouthHeight = 35; // Initial height of the mouth
   }
 
   update(burger) {
-    // Check if the burger is close to Ralph's face
-    let distance = dist(this.x, this.y, burger.x, burger.y);
-    this.mouthOpen = distance < 50; // Adjust the threshold as needed
+    // Check if the burger is close to Ralph's face along the x-axis
+    let distanceX = abs(burger.x - this.x );
+    this.mouthOpen = distanceX < 50; // Adjust the threshold as needed
 
-    // Adjust the x-coordinate of the burger if it's inside Ralph's mouth
-    if (this.mouthOpen && burger.x < this.x) {
-      burger.x = this.x;
-    }
+    // Adjust the height of the mouth based on the distance
+    this.mouthHeight = map((distanceX/2), 60, 30, 50, 60);
   }
 
   display() {
     fill(255);
-    rect(10, 40, 110, 170, 10);
+    rect(10, 40, 110, 130, 10);
     fill(0);
     rect(10, 40, 110, 35, 10, 10, 0, 0);
     fill(255);
     triangle(120, 100, 120, 140, 145, 140);
-
-    // Mouth
-    if (this.mouthOpen) {
-      fill(255);
-      rect(10, 40, 110, 20, 10, 10, 0, 0); // Rectangular mouth going down
-      line(10, 60, 120, 60); // Two lines connecting the mouth
-    } else {
-      line(this.x + 20, this.y, this.x + 40, this.y); // Closed mouth
-    }
-
+    
+    noStroke();
+    fill(255);
+    rect(10, 169, 40, this.mouthHeight);
+    // Restore stroke for other shapes
+    stroke(0)
     // Eye
     fill(255);
     ellipse(this.x - 5, this.y - 100, 30, 30);
@@ -78,6 +73,14 @@ class Burger {
     // Allow the burger to move freely across the entire screen
     this.x = mouseX;
     this.y = mouseY;
+
+    // Check if the burger is overlapping with the face border
+    if (this.x - this.width / 2 < 120) {
+      this.x = 120 + this.width / 2;
+    }
+    if (this.y - this.height / 2 < 40) {
+      this.y = 40 + this.height / 2;
+    }
   }
 
   display() {
