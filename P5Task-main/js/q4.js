@@ -34,14 +34,17 @@ class Ralph {
     this.mouthHeight = map((distanceX/2), 60, 30, 50, 60);
   }
 
-  display() {
+display() {
     fill(255);
     rect(10, 40, 110, 130, 10);
     fill(0);
     rect(10, 40, 110, 35, 10, 10, 0, 0);
     fill(255);
     triangle(120, 100, 120, 140, 145, 140);
-    
+    fill(255);
+
+    // New rectangle with changing Y position
+    rect(10, 229 + (this.mouthHeight-60), 110, 30, 10);
     noStroke();
     fill(255);
     rect(10, 169, 40, this.mouthHeight);
