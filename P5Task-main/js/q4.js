@@ -27,16 +27,17 @@ class Ralph {
 
   update(burger) {
     // Check if the burger is close to Ralph's face along the x-axis
-    let distanceX = abs(burger.x - this.x );
-    this.mouthOpen = distanceX < 50; // Adjust the threshold as needed
-
-    // Adjust the height of the mouth based on the distance
-    this.mouthHeight = map((distanceX/2), 60, 30, 50, 60);
+    let distanceX = 70 - (burger.x - this.x) / 2;
+    if (distanceX >= 0) {
+      this.mouthOpen = distanceX < 50; // Adjust the threshold as needed
+      // Adjust the height of the mouth based on the distance
+      this.mouthHeight = distanceX;
+    }
   }
 
-display() {
+  display() {
     fill(255);
-    rect(10, 40, 110, 130, 10);
+    rect(10, 40, 110, 130, 10, 10, 0, 0);
     fill(0);
     rect(10, 40, 110, 35, 10, 10, 0, 0);
     fill(255);
@@ -44,12 +45,15 @@ display() {
     fill(255);
 
     // New rectangle with changing Y position
-    rect(10, 229 + (this.mouthHeight-60), 110, 30, 10);
-    noStroke();
+    rect(10, 235 + (this.mouthHeight - 65), 110, 30, 0, 0, 10, 10);
     fill(255);
-    rect(10, 169, 40, this.mouthHeight);
+    noStroke();
+    rect(10, 169, 40, this.mouthHeight + 2);
     // Restore stroke for other shapes
-    stroke(0)
+    stroke(0);
+    line(50, 170 + this.mouthHeight, 50, 170);
+    line(10, 170 + this.mouthHeight, 10, 170);
+
     // Eye
     fill(255);
     ellipse(this.x - 5, this.y - 100, 30, 30);
@@ -72,19 +76,35 @@ class Burger {
     this.padding = 5;
   }
 
-  update() {
-    // Allow the burger to move freely across the entire screen
-    this.x = mouseX;
-    this.y = mouseY;
+// Inside the update function of the Burger class
+update() {
+  // Allow the burger to move freely across the entire screen
+  this.x = mouseX;
+  this.y = mouseY;
 
-    // Check if the burger is overlapping with the face border
-    if (this.x - this.width / 2 < 120) {
-      this.x = 120 + this.width / 2;
-    }
-    if (this.y - this.height / 2 < 40) {
-      this.y = 40 + this.height / 2;
-    }
+  // Check if the burger is behind Ralph's open mouth
+  let backOfMouth = 170 + this.mouthHeight;
+  console.log(this.y);
+
+  // Check if the burger is above the mouth and below 30 or above 170 but not between 230 and 250
+  if (( (this.y > 150 && this.y < 230)) && this.x - this.width / 2 < 60) {
+    this.x = 60 + this.width / 2;
   }
+  
+  // Restrict the burger from moving across the left face when y is between 30 and 170
+  if (this.y > 25 && this.x - this.width / 2 < 120 ) {
+    this.y = 25
+  }
+  if(this.y < 185 ){
+    this.x = 130 + this.width / 2;
+  }
+}
+
+
+
+
+
+
 
   display() {
     fill(255);
