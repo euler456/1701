@@ -76,36 +76,29 @@ class Burger {
     this.padding = 5;
   }
 
-// Inside the update function of the Burger class
-update() {
-  // Allow the burger to move freely across the entire screen
-  this.x = mouseX;
-  this.y = mouseY;
+  update() {
+    // Allow the burger to move freely across the entire screen
+    this.x = mouseX;
+    this.y = mouseY;
 
-  // Check if the burger is behind Ralph's open mouth
-  let backOfMouth = 170 + this.mouthHeight;
-  console.log(this.y);
+    // Check if the burger is behind Ralph's open mouth
+    let backOfMouth = 170 + this.mouthHeight;
 
-  // Check if the burger is above the mouth and below 30 or above 170 but not between 230 and 250
-  if (( (this.y > 150 && this.y < 230)) && this.x - this.width / 2 < 60) {
-    this.x = 60 + this.width / 2;
+    // Restrict the burger from moving across the left face when y is between 25 and 185
+    if (this.y > 25 && this.y < 185 && this.x - this.width / 2 < 130) {
+      this.x = 130 + this.width / 2;
+    }
+
+    // Restrict the burger from moving across the left face when y is between 170 and 250
+    if (this.y > 170 && this.y < 230 && this.x - this.width / 2 < 60) {
+      this.x = 60 + this.width / 2;
+    }
+
+    // Restrict the burger from moving further left than Ralph's face or the back of his open mouth
+    if (this.x - this.width / 2 < 60 && this.y > 230 ) {
+      this.x = 130 + this.width / 2; // Adjust the x value as needed
+    }
   }
-  
-  // Restrict the burger from moving across the left face when y is between 30 and 170
-  if (this.y > 25 && this.x - this.width / 2 < 120 ) {
-    this.y = 25
-  }
-  if(this.y < 185 ){
-    this.x = 130 + this.width / 2;
-  }
-}
-
-
-
-
-
-
-
   display() {
     fill(255);
     rect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height, 5);
