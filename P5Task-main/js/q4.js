@@ -81,16 +81,15 @@ class Burger {
     this.x = mouseX;
     this.y = mouseY;
 
-    // Check if the burger is behind Ralph's open mouth
-    let backOfMouth = 170 + this.mouthHeight;
+    console.log(this.y);
 
     // Restrict the burger from moving across the left face when y is between 25 and 185
-    if (this.y > 25 && this.y < 185 && this.x - this.width / 2 < 130) {
+    if (this.y > 25 && this.y <= 185 && this.x - this.width / 2 < 130) {
       this.x = 130 + this.width / 2;
     }
 
     // Restrict the burger from moving across the left face when y is between 170 and 250
-    if (this.y > 170 && this.y < 230 && this.x - this.width / 2 < 60) {
+    if (this.y > 185 && this.y <= 230 && this.x - this.width / 2 < 60) {
       this.x = 60 + this.width / 2;
     }
 
