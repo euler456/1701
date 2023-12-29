@@ -29,7 +29,6 @@ class Ralph {
     // Check if the burger is close to Ralph's face along the x-axis
     let distanceX = 70 - (burger.x - this.x) / 2;
     if (distanceX >= 0) {
-      this.mouthOpen = distanceX < 50; // Adjust the threshold as needed
       // Adjust the height of the mouth based on the distance
       this.mouthHeight = distanceX;
     }

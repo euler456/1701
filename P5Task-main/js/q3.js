@@ -49,7 +49,7 @@ function draw() {
   moon3Y = moon2Y + sin(moon3Angle) * moon3Radius;
 
   // Calculate angle between planet and moon2
-  let angleBetweenPlanetAndMoon2 = atan2(moon2Y - height / 2, moon2X - width / 2);
+  let angleBetweenPlanetAndMoon2 = atan2(moon1Y - height / 2, moon1X - width / 2);
 
   // Draw planet
   noStroke();
@@ -107,6 +107,14 @@ function draw() {
   }
 }
 
+
+
+function mouseMoved() {
+  let closestMoon = findClosestMoon(mouseX, mouseY);
+  moon1Stopped = closestMoon === 'moon1' && dist(mouseX, mouseY, moon1X, moon1Y) < moonSize / 2;
+  moon2Stopped = closestMoon === 'moon2' && dist(mouseX, mouseY, moon2X, moon2Y) < moonSize / 2;
+  moon3Stopped = closestMoon === 'moon3' && dist(mouseX, mouseY, moon3X, moon3Y) < moonSize / 2;
+}
 function findClosestMoon(x, y) {
   let d1 = dist(x, y, moon1X, moon1Y);
   let d2 = dist(x, y, moon2X, moon2Y);
@@ -120,14 +128,6 @@ function findClosestMoon(x, y) {
     return 'moon3';
   }
 }
-
-function mouseMoved() {
-  let closestMoon = findClosestMoon(mouseX, mouseY);
-  moon1Stopped = closestMoon === 'moon1' && dist(mouseX, mouseY, moon1X, moon1Y) < moonSize / 2;
-  moon2Stopped = closestMoon === 'moon2' && dist(mouseX, mouseY, moon2X, moon2Y) < moonSize / 2;
-  moon3Stopped = closestMoon === 'moon3' && dist(mouseX, mouseY, moon3X, moon3Y) < moonSize / 2;
-}
-
 function mousePressed() {
   let d1 = dist(mouseX, mouseY, moon1X, moon1Y);
   let d2 = dist(mouseX, mouseY, moon2X, moon2Y);

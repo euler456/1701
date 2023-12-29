@@ -5,7 +5,7 @@
     },
     "target": "es6", 
     "exclude": ["p5","play","./lib/p5"],
-    "include": ["js/*.js", "./lib/*.d.ts"], 
+    "include": ["js/*.js", "./lib/*.d.ts", "lib/p5/sketch.js"], 
     "baseUrl": ".", // this must be specified if "paths" is.
     "paths": {
       "*": ["*", "js/","lib/"]
