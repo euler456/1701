@@ -60,6 +60,7 @@ class Ralph {
     this.y = height / 2;
     this.mouthOpen = false;
     this.mouthHeight = 35; // Initial height of the mouth
+    this.closestBurger = 0;
     this.speed = 5; // Speed of Ralph's movement
   }
 
@@ -73,7 +74,8 @@ class Ralph {
       let distanceX = 70 - (closestBurger.position.x - this.x) / 2;
       if (distanceX >= 0) {
         // Adjust the height of the mouth based on the distance
-        this.mouthHeight = distanceX;
+        this.mouthHeight = distanceX ;
+        this.closestBurger = closestBurger;
       }
     }
   }
@@ -105,48 +107,77 @@ class Ralph {
     // Eye
     fill(255);
     ellipse(110, this.y + 45, 30, 30);
+    fill(0);
+    if (this.closestBurger) {
+      let angle = atan2(this.closestBurger.position.y - this.y + 10, this.closestBurger.position.x - this.x + 10);
+      let eyeX = this.x - 17 + cos(angle) * 8;
+      let eyeY = this.y + 45 + sin(angle) * 8; // Adjusted the eye's y position
+      ellipse(eyeX, eyeY, 15, 15);
+    
+    }
   }
 }
 class Burger {
   constructor() {
     this.breadWidth = 45;
-    this.breadHeight = 35;
+    this.breadHeight = 25;
     this.pattyWidth = 70;
     this.pattyHeight = 8;
     this.borderWeight = 1;
     this.position = createVector(width / 2, height / 2);
-    this.velocity = createVector(random(-3, 3), random(-3, 3));
+    this.velocity = createVector(random(-2, 2), random(-2, 2));
   }
 
   update() {
-    // Prevent the burger from crossing into the no-crossing area on the left
-    if (this.position.x - this.breadWidth / 2 < 150) {
-      this.velocity.x = abs(this.velocity.x); // Reverse direction
-    }
-
-    // Bounce the burger off the walls
-    if (
-      this.position.x - this.breadWidth / 2 < 0 ||
-      this.position.x + this.breadWidth / 2 > width ||
-      this.position.x - this.pattyWidth / 2 < 0 ||
-      this.position.x + this.pattyWidth / 2 > width
-    ) {
-      this.velocity.x *= -1;
-    }
-
-    // Bounce the burger off the top and bottom
-    if (
-      this.position.y - this.breadHeight / 2 < 0 ||
-      this.position.y + this.breadHeight / 2 > height ||
-      this.position.y - this.pattyHeight / 2 < 0 ||
-      this.position.y + this.pattyHeight / 2 > height
-    ) {
-      this.velocity.y *= -1;
-    }
-
-    // Update the burger's position
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
+    // Check if the burger is in the mouth region
+      if (
+        this.position.x > 105 &&
+        this.position.x < 180 &&
+        this.position.y > ralph.y + 125 &&
+        this.position.y < ralph.y + 125 + ralph.mouthHeight
+      ) {
+        // Bounce the burger within the mouth
+        this.velocity.y *= -1;
+      } else {
+        // Burger is outside the mouth, apply regular bouncing logic
+  
+        // Check if the burger hits the x-coordinate 70, then move it back to the starting position
+        if (this.position.x <= 110) {
+          this.position.set(width / 2, height / 2);
+          this.velocity = createVector(random(-2, 2), random(-2, 2)); // Reset velocity
+        }
+  
+        // Prevent the burger from crossing into the no-crossing area on the left
+        if (this.position.x - this.breadWidth / 2 < 150) {
+          // Ensure the burger cannot cross the x-axis, but can go into the mouth
+          this.position.x = max(this.position.x, 150 + this.breadWidth / 2);
+          this.velocity.x = abs(this.velocity.x); // Reverse direction
+        }
+  
+        // Bounce the burger off the walls
+        if (
+          this.position.x - this.breadWidth / 2 < 0 ||
+          this.position.x + this.breadWidth / 2 > width ||
+          this.position.x - this.pattyWidth / 2 < 0 ||
+          this.position.x + this.pattyWidth / 2 > width
+        ) {
+          this.velocity.x *= -1;
+        }
+  
+        // Bounce the burger off the top and bottom
+        if (
+          this.position.y - this.breadHeight / 2 < 0 ||
+          this.position.y + this.breadHeight / 2 > height ||
+          this.position.y - this.pattyHeight / 2 < 0 ||
+          this.position.y + this.pattyHeight / 2 > height
+        ) {
+          this.velocity.y *= -1;
+        }
+      }
+  
+      // Update the burger's position
+      this.position.x += this.velocity.x;
+      this.position.y += this.velocity.y;
   }
 
   display() {
