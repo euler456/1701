@@ -1,5 +1,6 @@
 let burgers = [];
 let ralph;
+let score = 0;
 
 function setup() {
   createCanvas(500, 400);
@@ -19,12 +20,11 @@ function draw() {
 
   // Handle keyboard input
   if (keyIsDown(UP_ARROW)) {
-    ralph.move(-1); // Move Ralph up
+    ralph.move(-1); 
   } else if (keyIsDown(DOWN_ARROW)) {
-    ralph.move(1); // Move Ralph down
+    ralph.move(1); 
   }
 
-  // Update and draw Ralph
   ralph.update(closestBurger);
   ralph.display();
 
@@ -34,9 +34,11 @@ function draw() {
     burger.update();
     burger.display();
   }
+  fill(0);
+  textSize(20);
+  text("Score: " + score, 10, 30);
 }
 
-// Function to find the closest burger to a given object
 function findClosestBurger(object, burgerArray) {
   let closestBurger = null;
   let closestDistance = Infinity;
@@ -59,9 +61,9 @@ class Ralph {
     this.x = width / 4;
     this.y = height / 2;
     this.mouthOpen = false;
-    this.mouthHeight = 35; // Initial height of the mouth
+    this.mouthHeight = 35; 
     this.closestBurger = 0;
-    this.speed = 5; // Speed of Ralph's movement
+    this.speed = 2; 
   }
 
   move(direction) {
@@ -83,23 +85,21 @@ class Ralph {
   display() {
     fill(255);
     rect(80, this.y, 110, 130, 10, 10, 0, 0);
-    noFill(); // Adding border to the white rectangle
+    noFill(); 
     stroke(0);
     strokeWeight(1);
     rect(80, this.y + 50, 110, 130, 10, 10, 0, 0);
     fill(0);
     rect(80, this.y, 110, 35, 10, 10, 0, 0);
-    noFill(); // Adding border to the black rectangle
+    noFill();
     stroke(0);
     fill(255);
     triangle(135, this.y + 60, 135, this.y + 90, 155, this.y + 90);
     fill(255);
-    // New rectangle with changing Y position
     rect(80, this.y + 195 + (this.mouthHeight - 65), 110, 30, 0, 0, 10, 10);
-    noStroke(); // No border for the new rectangle
+    noStroke(); 
     fill(255);
-    rect(48, this.y + 125, 45, this.mouthHeight + 34);
-    // Restore stroke for other shapes
+    rect(48, this.y + 125 + this.mouthHeight/2, 45, this.mouthHeight + 30);
     stroke(0);
     line(70, this.y + 115 + this.mouthHeight, 70, this.y + 115);
     line(25, this.y + 115 + this.mouthHeight, 25, this.y + 115);
@@ -111,7 +111,7 @@ class Ralph {
     if (this.closestBurger) {
       let angle = atan2(this.closestBurger.position.y - this.y + 10, this.closestBurger.position.x - this.x + 10);
       let eyeX = this.x - 17 + cos(angle) * 8;
-      let eyeY = this.y + 45 + sin(angle) * 8; // Adjusted the eye's y position
+      let eyeY = this.y + 45 + sin(angle) * 8;
       ellipse(eyeX, eyeY, 15, 15);
     
     }
@@ -130,28 +130,36 @@ class Burger {
 
   update() {
     // Check if the burger is in the mouth region
+    if (
+      this.position.x > 105 &&
+      this.position.x < 180 &&
+      this.position.y > ralph.y + 130 &&
+      this.position.y < ralph.y + 100 + ralph.mouthHeight
+    ) {
+      // Bounce the burger within the mouth  
       if (
-        this.position.x > 105 &&
-        this.position.x < 180 &&
-        this.position.y > ralph.y + 125 &&
-        this.position.y < ralph.y + 125 + ralph.mouthHeight
+        this.position.y - this.breadHeight / 2 < 0 ||
+        this.position.y + this.breadHeight / 2 > height ||
+        this.position.y - this.pattyHeight / 2 < 0 ||
+        this.position.y + this.pattyHeight / 2 > height
       ) {
-        // Bounce the burger within the mouth
         this.velocity.y *= -1;
-      } else {
-        // Burger is outside the mouth, apply regular bouncing logic
-  
-        // Check if the burger hits the x-coordinate 70, then move it back to the starting position
-        if (this.position.x <= 110) {
-          this.position.set(width / 2, height / 2);
-          this.velocity = createVector(random(-2, 2), random(-2, 2)); // Reset velocity
-        }
+      }
+    } 
+    else {
+      // Check if the burger hits the x-coordinate 70, then move it back to the starting position
+      if (this.position.x <= 110) {
+        this.position.set(width / 2, height / 2);
+        this.velocity = createVector(random(-2, 2), random(-2, 2)); // Reset velocity
+        score++;
+        console.log("Score:", score);
+      }
   
         // Prevent the burger from crossing into the no-crossing area on the left
         if (this.position.x - this.breadWidth / 2 < 150) {
           // Ensure the burger cannot cross the x-axis, but can go into the mouth
           this.position.x = max(this.position.x, 150 + this.breadWidth / 2);
-          this.velocity.x = abs(this.velocity.x); // Reverse direction
+          this.velocity.x = abs(this.velocity.x); 
         }
   
         // Bounce the burger off the walls
@@ -178,25 +186,21 @@ class Burger {
       // Update the burger's position
       this.position.x += this.velocity.x;
       this.position.y += this.velocity.y;
+      
   }
 
   display() {
-    // Draw the white bread layers
-    fill(255); // White bread layers
+    fill(255); 
     rectMode(CENTER);
     rect(this.position.x, this.position.y, this.breadWidth, this.breadHeight, 5);
 
-    // Draw the black border for the bread layers
     noFill();
     stroke(0);
     strokeWeight(this.borderWeight);
     rect(this.position.x, this.position.y, this.breadWidth, this.breadHeight, 5);
-
-    // Reset stroke settings
     noStroke();
 
-    // Draw the burger layers
-    fill(0); // Black patty
+    fill(0); 
     rect(this.position.x, this.position.y, this.pattyWidth, this.pattyHeight);
   }
 }
