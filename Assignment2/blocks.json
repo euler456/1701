@@ -1,0 +1,11 @@
+{
+    "blocks": [
+        {"x": 100, "y": 300, "width": 80, "height": 20},
+        {"x": 300, "y": 250, "width": 120, "height": 20},
+        {"x": 500, "y": 200, "width": 100, "height": 20}
+    ],
+    "spikes": [
+        {"x": 200, "y": 350, "width": 20, "height": 20},
+        {"x": 400, "y": 300, "width": 20, "height": 20}
+    ]
+}
