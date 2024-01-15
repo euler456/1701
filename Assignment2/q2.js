@@ -139,12 +139,11 @@ function setup() {
     let spike = createSpike(blockData.spikes[i].x, blockData.spikes[i].y, spikeWidth, spikeHeight);
     spikes.push(spike);
   }
-  for (let i = 0; i < 3; i++) { // Adjust the number of hearts as needed
+  for (let i = 0; i < 3; i++) { 
     let heart = createHeart(blockData.heart[i].x, blockData.heart[i].y, heartWidth, heartHeight);
     hearts.push(heart);
   }
 }
-
 
 let lastBallY = 0; // Variable to store the last known Y position of the ball
 
