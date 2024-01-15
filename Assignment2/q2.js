@@ -31,15 +31,19 @@ class Sprite {
   }
 }
 
-class Spike extends Sprite {
+class Spike {
   constructor(x, y, width, height) {
-    super(x, y, width, height, 'static');
-    this.img = loadImage('spike.png'); // Load the image
+    this.position = createVector(x, y);
+    this.width = width;
+    this.height = height;
+    this.image = loadImage('spike.png');
   }
 
+  moveUp(speed) {
+    this.position.y -= speed;
+  }
   display() {
-    // Use the image function to draw the spike image
-    image(this.img, this.position.x, this.position.y, this.width, this.height);
+    image(this.image, this.position.x, this.position.y, this.width, this.height);
   }
 }
 
@@ -57,22 +61,32 @@ class Ball extends Sprite {
 let ball;
 let blocks = [];
 let spikes = [];
-let spikeImage;
-
-let spikeWidth = 250; // Adjust width based on your requirements
-let spikeHeight = 180; // Adjust height based on your requirements
-
+let lives = 5;
+let spikeWidth = 100; 
+let spikeHeight = 20; 
+let score = 0; 
+let ballContactingBlock = false;
 let blockData = {
   "blocks": [
-    { "x": 0, "y": 200 },
+    { "x": 150, "y": 100 },
+    { "x": 50, "y": 150 },
     { "x": 150, "y": 250 },
     { "x": 200, "y": 300 },
     { "x": 250, "y": 550 },
-    { "x": 200, "y": 500 }
+    { "x": 50, "y": 600 },
+    { "x": 150, "y": 650 },
+    { "x": 250, "y": 700 },
+    { "x": 275, "y": 800 },
+
   ],
   "spikes": [
-    { "x": 150, "y": 400 },
-    { "x": 250, "y": 450 }
+    { "x": 70, "y": 350 },
+    { "x": 250, "y": 200 },
+    { "x": 200, "y": 450 },
+    { "x": 250, "y": 750 },
+    { "x": 50, "y": 850 },
+
+
   ]
 };
 
@@ -83,48 +97,62 @@ function createBlock(x, y, width, height) {
   return block;
 }
 
-function preload() {
-  // Load spike image in the preload function with callbacks
-  spikeImage = loadImage('spike.png', imgLoaded, imgError);
+function createSpike(x, y, width, height) {
+  let spike = new Spike(x, y, width, height);
+  spike.shapeColor = color(255);
+  return spike;
 }
 
-function imgLoaded(img) {
-  console.log('Image loaded successfully:', img);
-}
+function respawnBall() {
+  if (lives > 0) {
+    lives--;
+    ball.position.x = width / 2;
+    ball.position.y = 50;
+    ball.velocity.y = 0;
 
-function imgError(err) {
-  console.error('Error loading image:', err);
+    console.log("Lives remaining: " + lives);
+  } else {
+    console.log("Game Over");
+    lives = 3;
+    score = 0;
+  }
 }
-
 function setup() {
   createCanvas(400, 400);
   ball = new Ball(width / 2, 50, 20);
   ball.shapeColor = color(255);
 
-  // Create blocks using data from JSON
   for (let i = 0; i < blockData.blocks.length; i++) {
     let block = createBlock(blockData.blocks[i].x, blockData.blocks[i].y, 100, 15);
     blocks.push(block);
   }
+
+  for (let i = 0; i < blockData.spikes.length; i++) {
+    let spike = createSpike(blockData.spikes[i].x, blockData.spikes[i].y, spikeWidth, spikeHeight);
+    spikes.push(spike);
+  }
 }
 
-function draw() {
-  background(220);
 
-  // Move blocks up gradually
+let lastBallY = 0; // Variable to store the last known Y position of the ball
+
+function draw() {
+  background(200);
+  fill(0);
+  textSize(16);
+  text("Score: " + score, 10, 20);
+  text("Lives: " + lives, 10, 40);
+
   for (let i = 0; i < blocks.length; i++) {
     blocks[i].moveUp(0.5);
     blocks[i].display();
   }
 
-  // Draw the spike image for each spike once it's loaded
-  if (spikeImage) {
-    for (let i = 0; i < blockData.spikes.length; i++) {
-      image(spikeImage, blockData.spikes[i].x, blockData.spikes[i].y, spikeWidth, spikeHeight);
-    }
+  for (let i = 0; i < spikes.length; i++) {
+    spikes[i].moveUp(0.5);
+    spikes[i].display();
   }
 
-  // Move the ball based on user input
   if (keyIsDown(LEFT_ARROW) && ball.position.x > 25) {
     ball.position.x -= 5;
   }
@@ -132,26 +160,28 @@ function draw() {
     ball.position.x += 5;
   }
 
-  // Gravity for the ball
   ball.position.y += 2;
 
-  // Check collisions with blocks
   for (let i = 0; i < blocks.length; i++) {
     if (ball.collide(blocks[i])) {
       ball.position.y = blocks[i].position.y - ball.height / 2;
-      ball.velocity.y = 0; // Stop the ball from moving vertically
+      ball.velocity.y = 0;
     }
   }
-
-  // Check collisions with spikes
-  for (let i = 0; i < blockData.spikes.length; i++) {
-    if (ball.collide(blockData.spikes[i])) {
-      // Ball hits a spike, respawn the ball
-      ball.position.x = width / 2;
-      ball.position.y = 50;
+  for (let i = 0; i < spikes.length; i++) {
+    if (ball.collide(spikes[i])) {
+      respawnBall();
     }
+  }
+  if (ball.position.y > lastBallY) {
+    score += int((ball.position.y - lastBallY)/2);
+  }
+  lastBallY = ball.position.y;
+  if (ball.position.y > height) {
+    respawnBall();
   }
 
   // Display the ball
   ball.display();
 }
+

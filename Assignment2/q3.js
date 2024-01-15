@@ -21,6 +21,6 @@ function draw() {
 
   // Draw the spike image at a specific position
   if (spikeImage) {
-    image(spikeImage, 0,0, 250, 180);
+    image(spikeImage, 0,0, 150, 150);
   }
 }
