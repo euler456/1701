@@ -30,7 +30,26 @@ class Sprite {
     return false;
   }
 }
+class Heart extends Sprite {
+  constructor(x, y, width, height) {
+    super(x, y, width, height, 'dynamic');
+    this.image = loadImage('heart.png');
+    this.collected = false;
+  }
 
+  collect() {
+    if (!this.collected) {
+      this.collected = true;
+      lives++;
+    }
+  }
+
+  display() {
+    if (!this.collected) {
+      image(this.image, this.position.x, this.position.y, this.width, this.height);
+    }
+  }
+}
 class Spike {
   constructor(x, y, width, height) {
     this.position = createVector(x, y);
@@ -72,24 +91,42 @@ let blockData = {
     { "x": 50, "y": 150 },
     { "x": 150, "y": 250 },
     { "x": 200, "y": 300 },
+    { "x": 150, "y": 400 },
+    { "x": 50, "y": 500 },
     { "x": 250, "y": 550 },
     { "x": 50, "y": 600 },
     { "x": 150, "y": 650 },
     { "x": 250, "y": 700 },
-    { "x": 275, "y": 800 },
-
+    { "x": 200, "y": 800 },
+    { "x": 200, "y": 900 },
+    { "x": 50, "y": 950 }
   ],
   "spikes": [
-    { "x": 70, "y": 350 },
     { "x": 250, "y": 200 },
-    { "x": 200, "y": 450 },
+    { "x": 70, "y": 350 },
+    { "x": 220, "y": 450 },
     { "x": 250, "y": 750 },
     { "x": 50, "y": 850 },
-
+  ],
+  "heart":[
+    { "x": 220, "y": 270 },
+    { "x": 170, "y": 620 },
+    { "x": 220, "y": 870 }
 
   ]
 };
+let hearts = [];
+let heartWidth = 30;
+let heartHeight = 30;
 
+function createHeart(x, y, width, height) {
+  let heart = new Heart(x, y, width, height);
+  heart.shapeColor = color(255);
+  return heart;
+}
+function preload() {
+  TopspikeImage = loadImage('upsidedownspike.png');
+}
 function createBlock(x, y, width, height) {
   let block = new Sprite(x, y, width, height, 'static');
   block.shapeColor = color(0);
@@ -131,6 +168,10 @@ function setup() {
     let spike = createSpike(blockData.spikes[i].x, blockData.spikes[i].y, spikeWidth, spikeHeight);
     spikes.push(spike);
   }
+  for (let i = 0; i < 3; i++) { // Adjust the number of hearts as needed
+    let heart = createHeart(blockData.heart[i].x, blockData.heart[i].y, heartWidth, heartHeight);
+    hearts.push(heart);
+  }
 }
 
 
@@ -143,13 +184,20 @@ function draw() {
   text("Score: " + score, 10, 20);
   text("Lives: " + lives, 10, 40);
 
+  // Display top spikes
+  for (let i = 0; i < 4; i++) {
+    image(TopspikeImage, i * 100, 0, 100, 10);
+  }
+
+  // Display blocks and move them up
   for (let i = 0; i < blocks.length; i++) {
-    blocks[i].moveUp(0.5);
+    blocks[i].moveUp(0.3);
     blocks[i].display();
   }
 
+  // Display spikes and move them up
   for (let i = 0; i < spikes.length; i++) {
-    spikes[i].moveUp(0.5);
+    spikes[i].moveUp(0.3);
     spikes[i].display();
   }
 
@@ -168,20 +216,35 @@ function draw() {
       ball.velocity.y = 0;
     }
   }
+
   for (let i = 0; i < spikes.length; i++) {
     if (ball.collide(spikes[i])) {
       respawnBall();
     }
   }
+
+  for (let i = 0; i < 4; i++) {
+    let topSpike = createSpike(i * 100, 0, 100, 10);
+    if (ball.collide(topSpike)) {
+      respawnBall();
+    }
+  }
+  for (let i = 0; i < hearts.length; i++) {
+    hearts[i].moveUp(0.3);
+    hearts[i].display();
+
+    if (ball.collide(hearts[i])) {
+      hearts[i].collect();
+    }
+  }
   if (ball.position.y > lastBallY) {
-    score += int((ball.position.y - lastBallY)/2);
+    score += int((ball.position.y - lastBallY) / 2);
   }
   lastBallY = ball.position.y;
+
   if (ball.position.y > height) {
     respawnBall();
   }
 
-  // Display the ball
   ball.display();
 }
-
