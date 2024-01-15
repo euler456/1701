@@ -85,36 +85,6 @@ let spikeWidth = 100;
 let spikeHeight = 20; 
 let score = 0; 
 let ballContactingBlock = false;
-let blockData = {
-  "blocks": [
-    { "x": 150, "y": 100 },
-    { "x": 50, "y": 150 },
-    { "x": 150, "y": 250 },
-    { "x": 200, "y": 300 },
-    { "x": 150, "y": 400 },
-    { "x": 50, "y": 500 },
-    { "x": 250, "y": 550 },
-    { "x": 50, "y": 600 },
-    { "x": 150, "y": 650 },
-    { "x": 250, "y": 700 },
-    { "x": 200, "y": 800 },
-    { "x": 200, "y": 900 },
-    { "x": 50, "y": 950 }
-  ],
-  "spikes": [
-    { "x": 250, "y": 200 },
-    { "x": 70, "y": 350 },
-    { "x": 220, "y": 450 },
-    { "x": 250, "y": 750 },
-    { "x": 50, "y": 850 },
-  ],
-  "heart":[
-    { "x": 220, "y": 270 },
-    { "x": 170, "y": 620 },
-    { "x": 220, "y": 870 }
-
-  ]
-};
 let hearts = [];
 let heartWidth = 30;
 let heartHeight = 30;
@@ -125,6 +95,7 @@ function createHeart(x, y, width, height) {
   return heart;
 }
 function preload() {
+  blockData = loadJSON('blocks.json');
   TopspikeImage = loadImage('upsidedownspike.png');
 }
 function createBlock(x, y, width, height) {
