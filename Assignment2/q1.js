@@ -18,7 +18,6 @@ function draw() {
   // Find the closest burger to Ralph
   let closestBurger = findClosestBurger(ralph, burgers);
 
-  // Handle keyboard input
   if (keyIsDown(UP_ARROW)) {
     ralph.move(-1); 
   } else if (keyIsDown(DOWN_ARROW)) {
@@ -76,7 +75,7 @@ class Ralph {
       let distanceX = 70 - (closestBurger.position.x - this.x) / 2;
       if (distanceX >= 0) {
         // Adjust the height of the mouth based on the distance
-        this.mouthHeight = distanceX ;
+        this.mouthHeight = distanceX*1.5;
         this.closestBurger = closestBurger;
       }
     }
