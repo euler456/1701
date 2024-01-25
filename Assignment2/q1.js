@@ -102,7 +102,6 @@ class Ralph {
     stroke(0);
     line(70, this.y + 115 + this.mouthHeight, 70, this.y + 115);
     line(25, this.y + 115 + this.mouthHeight, 25, this.y + 115);
-
     // Eye
     fill(255);
     ellipse(110, this.y + 45, 30, 30);
