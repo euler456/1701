@@ -297,7 +297,6 @@ function checkGravityCondition() {
         (ball.y < clouds[0].position.y && (ball.x + ball.width < clouds[0].position.x || ball.x > clouds[clouds.length - 1].position.x + clouds[clouds.length - 1].width))
     ) {
         ball.gravity = 0.4;
-        console.log(removedBlocks);
     }
 }
 function createGameLevelScene(level) {
