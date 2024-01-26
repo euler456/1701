@@ -3,21 +3,41 @@ class Block {
         this.position = createVector(x, y);
         this.width = width;
         this.height = height;
-        this.shapeColor = color(0);
+        this.blockImage = loadImage('mud.png'); // Load block image
     }
 
     display() {
-        fill(this.shapeColor);
-        rect(this.position.x, this.position.y, this.width, this.height);
+        image(this.blockImage, this.position.x, this.position.y, this.width, this.height);
     }
 }
+class Cloud {
+    constructor(x, y, width, height) {
+        this.position = createVector(x, y);
+        this.width = width;
+        this.height = height;
+        this.cloudImage = loadImage('cloud.png'); // Load cloud image
+    }
 
+    moveRight(speed) {
+        this.position.x += speed;
+
+        // Reset the cloud position if it goes beyond the canvas width
+        if (this.position.x > 800) {
+            this.position.x = 0;
+        }
+    }
+
+    display() {
+        // Display the cloud using the loaded image
+        image(this.cloudImage, this.position.x, this.position.y, this.width, this.height);
+    }
+}
 class Ball {
     constructor() {
         this.x = width / 2;
         this.y = height - 50;
-        this.width = 40; // Adjust the width of the character
-        this.height = 40; // Adjust the height of the character
+        this.width = 30;
+        this.height = 40; 
         this.velocityX = 0;
         this.velocityY = 0;
         this.gravity = 0.4;
@@ -57,8 +77,9 @@ class Ball {
     jump() {
         // Check if the character is on the ground and not already jumping
         if (!this.jumping) {
-            this.velocityY = -10; // Jumping force
+            this.velocityY = -10;
             this.jumping = true;
+            ball.gravity = 0.4; 
         }
     }
 
@@ -118,7 +139,7 @@ Sprite.prototype.update = function () {
     // Check if the ball is on the ground
     if (this.position.y === height - this.height / 2) {
         this.jumping = false;
-        this.velocity.y = 0; // Stop vertical velocity when on the ground
+        this.velocity.y = 0;
     }
 };
 
@@ -135,9 +156,15 @@ let leftKey = false;
 let rightKey = false;
 let jumpKey = false;
 let mainCharacterImage;
+let cloudImage;
+let clouds = [];
+let removedBlocks = [];
 
+let blockImage;
 function preload() {
     mainCharacterImage = loadImage('maincharacter.png');
+    cloudImage = loadImage('cloud.png');
+    blockImage = loadImage('mud.png');
 }
 
 function setup() {
@@ -178,7 +205,14 @@ function draw() {
         jumpKey = false; // Reset jumpKey after jumping
     }
 }
-
+function createCloud(x, y, width, height) {
+    let cloud = new Cloud(x, y, width, height);
+    return cloud;
+}
+function createBlock(x, y, width, height) {
+    let block = new Block(x, y, width, height, 'static');
+    return block;
+}
 function keyPressed() {
     // Set flags when keys are pressed
     if (keyCode === 65) {
@@ -187,7 +221,7 @@ function keyPressed() {
     } else if (keyCode === 68) {
         // D key for moving right
         rightKey = true;
-    } else if (keyCode === 32) {
+    } else if (keyCode === 87) {
         // Spacebar for jumping
         jumpKey = true;
     }
@@ -255,65 +289,96 @@ function createBall() {
     let newBall = new Ball();
     return newBall;
 }
-
+function checkGravityCondition() {
+    // Check if the ball is higher than the blocks and outside block's X range
+    if (
+        (ball.y < blocks[0].position.y && (ball.x + ball.width < blocks[0].position.x || ball.x > blocks[blocks.length - 1].position.x + blocks[blocks.length - 1].width)) ||
+        (blocks.length === 0 && removedBlocks.length === 0) || 
+        (ball.y < clouds[0].position.y && (ball.x + ball.width < clouds[0].position.x || ball.x > clouds[clouds.length - 1].position.x + clouds[clouds.length - 1].width))
+    ) {
+        ball.gravity = 0.4;
+        console.log(removedBlocks);
+    }
+}
 function createGameLevelScene(level) {
     ball = createBall();
+    blocks = [];
+    clouds = [];
+
     loadJSON(`level${level}.json`, function (data) {
         // Parse the JSON data
         if (data.blocks && Array.isArray(data.blocks)) {
             // Use a loop to create blocks
             for (let i = 0; i < data.blocks.length; i++) {
-                let block = createBlock(data.blocks[i].x, data.blocks[i].y, 100, 15);
+                let block = createBlock(data.blocks[i].x, data.blocks[i].y, 50, 20);
                 blocks.push(block);
             }
         } else {
             console.error('Invalid JSON format. Missing or incorrect "blocks" array.');
         }
+
+        if (data.clouds && Array.isArray(data.clouds)) {
+            // Use a loop to create clouds
+            for (let i = 0; i < data.clouds.length; i++) {
+                let cloud = createCloud(data.clouds[i].x, data.clouds[i].y, 100, 30);
+                clouds.push(cloud);
+            }
+        } else {
+            console.error('Invalid JSON format. Missing or incorrect "clouds" array.');
+        }
     }, 'json');
 
-    return function () {
+    return function gameLevelScene() {
         background(120);
         fill(255);
 
-        if (blocks) {
             ball.update();
             ball.display();
 
-            for (let i = 0; i < blocks.length; i++) {
-                if (blocks[i]) { 
-                    blocks[i].display();
-
-                    if (ball.collide(blocks[i])) {
-                        // Draw a rectangle at the point of collision
-                        fill(255, 0, 0); // Red color
-                        noStroke();
-                        rect(
-                            max(ball.x - ball.width / 2, blocks[i].position.x),
-                            max(ball.y - ball.height / 2, blocks[i].position.y),
-                            min(ball.width, blocks[i].width),
-                            min(ball.height, blocks[i].height)
-                        );
-
-                        // Adjust the ball's position if there is a collision
-                        ball.y = blocks[i].position.y - ball.height / 2 - 20;
-
-                        // Stop vertical velocity when on the block
-                        ball.velocityY = 0;
-
-                        // Set jumping to false when the ball is on the block
-                        ball.jumping = false;
+            // Check if the ball is higher than the blocks and outside block's X range
+            checkGravityCondition();        
+            // Display clouds
+            for (let i = 0; i < clouds.length; i++) {
+                if (clouds[i]) {
+                    clouds[i].moveRight(2); 
+                    clouds[i].display();
+            
+                    if (ball.collide(clouds[i])) {
+                        if (ball.y + ball.height / 2 > clouds[i].position.y) {
+                            ball.velocityY = 0;
+                            ball.jumping = false;
+                        } else {
+                            ball.velocityY = 0;
+                            ball.gravity = 0;
+                            ball.y = clouds[i].position.y - ball.height;
+                            ball.jumping = false;
+                        }
                     }
                 }
             }
-        }
+            // Display blocks
+            for (let i = 0; i < blocks.length; i++) {
+                if (blocks[i]) {
+                    blocks[i].display();
+                    if (ball.collide(blocks[i])) {
+                        // Check if the ball is above the block
+                        if (ball.y + ball.height / 2 > blocks[i].position.y) {
+                            ball.velocityY = 0;
+                            ball.jumping = false;
+                            removedBlocks.push(blocks.splice(i, 1)[0]); // Remove and push into removedBlocks
+                        } else {
+                            ball.velocityY = 0;
+                            ball.gravity = 0;
+                            ball.y = blocks[i].position.y - ball.height;
+                            ball.jumping = false;
+                        }
+                    }
+                }
+            }
+        
     };
 }
-function createBlock(x, y, width, height) {
-    let block = new Sprite(x, y, width, height, 'static');
-    block.shapeColor = color(0);
-    block.immovable = true;
-    return block;
-}
+
 function checkCollision(obj1, obj2) {
     return (
         obj1.x < obj2.position.x + obj2.width &&
