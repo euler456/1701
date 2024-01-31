@@ -14,12 +14,10 @@ let cloudImage;
 let clouds = [];
 let removedBlocks = [];
 let mainCharacterImage;
-let blockImage;
 
 function preload() {
     mainCharacterImage = loadImage('maincharacter.png');
     cloudImage = loadImage('cloud.png');
-    blockImage = loadImage('mud.png');
 }
 
 function setup() {
@@ -68,8 +66,8 @@ function createCloud(x, y, width, height) {
     return cloud;
 }
 
-function createBlock(x, y, width, height) {
-    let block = new Block(x, y, width, height, 'static');
+function createBlock(id, x, y, width, height) {
+    let block = new Block(id, x, y, width, height, 'static');
     return block;
 }
 
@@ -151,15 +149,32 @@ function createBall() {
 }
 
 function checkGravityCondition() {
-    // Check if the ball is higher than the blocks and outside block's X range
-    if (
-        (ball.y < blocks[0].position.y && (ball.x + ball.width < blocks[0].position.x || ball.x > blocks[blocks.length - 1].position.x + blocks[blocks.length - 1].width)) ||
-        (blocks.length === 0 && removedBlocks.length === 0) ||
-        (ball.y < clouds[0].position.y && (ball.x + ball.width < clouds[0].position.x || ball.x > clouds[clouds.length - 1].position.x + clouds[clouds.length - 1].width))
-    ) {
+    let onBlock = false;
+
+    for (let i = 0; i < blocks.length; i++) {
+        if (ball.y + ball.height > blocks[i].position.y && ball.collide(blocks[i])) {
+            onBlock = true;
+            break;
+        }
+    }
+
+    let onCloud = false;
+    for (let i = 0; i < clouds.length; i++) {
+        if (ball.y + ball.height > clouds[i].position.y && ball.collide(clouds[i])) {
+            onCloud = true;
+            break;
+        }
+    }
+
+    if (!onBlock) {
         ball.gravity = 0.4;
+    } else {
+        ball.gravity = 0;
+        ball.jumping = false;
     }
 }
+
+
 
 function createGameLevelScene(level) {
     ball = createBall();
@@ -169,9 +184,8 @@ function createGameLevelScene(level) {
     loadJSON(`level${level}.json`, function (data) {
         // Parse the JSON data
         if (data.blocks && Array.isArray(data.blocks)) {
-            // Use a loop to create blocks
             for (let i = 0; i < data.blocks.length; i++) {
-                let block = createBlock(data.blocks[i].x, data.blocks[i].y, 50, 20);
+                let block = createBlock(i, data.blocks[i].x, data.blocks[i].y, 50, 20);
                 blocks.push(block);
             }
         } else {
@@ -221,14 +235,14 @@ function createGameLevelScene(level) {
         for (let i = 0; i < blocks.length; i++) {
             if (blocks[i]) {
                 blocks[i].display();
-        
-                // Check if the ball collides with the block
                 if (ball.collide(blocks[i])) {
                     // Check if the ball is above the block
                     if (ball.y + ball.height / 2 > blocks[i].position.y) {
                         ball.velocityY = 0;
                         ball.jumping = false;
-                        removedBlocks.push(blocks.splice(i, 1)[0]); // Remove and push into removedBlocks
+
+                        // Store the removed block with its ID
+                        removedBlocks.push({ id: blocks[i].id, block: blocks.splice(i, 1)[0] });
                     } else {
                         ball.velocityY = 0;
                         ball.gravity = 0;
@@ -238,10 +252,17 @@ function createGameLevelScene(level) {
                 }
             }
         }
-        
-    };
-}
+        refreshRemainingBlocks();
 
+    };
+
+}
+function refreshRemainingBlocks() {
+    for (let i = 0; i < removedBlocks.length; i++) {
+        blocks.push(createBlock(removedBlocks[i].id));
+    }
+    removedBlocks = [];
+}
 function checkCollision(obj1, obj2) {
     return (
         obj1.x < obj2.position.x + obj2.width &&
@@ -279,7 +300,8 @@ function playButtonClicked() {
 }
 
 class Block {
-    constructor(x, y, width, height) {
+    constructor(id, x, y, width, height) {
+        this.id = id; // Add id property
         this.position = createVector(x, y);
         this.width = width;
         this.height = height;
