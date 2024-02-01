@@ -17,7 +17,9 @@ let mainCharacterImage;
 let facingLeft = true;
 let isFacingRight = true;
 let prevPlayerY = 0;
+let movedUpwards = false;
 let blockCloudMovementSpeed = 2;
+
 function preload() {
     mainCharacterImage = loadImage('maincharacter.png');
     cloudImage = loadImage('cloud.png');
@@ -158,41 +160,52 @@ function createBall() {
     let newBall = new Ball();
     return newBall;
 }
+
 function checkPlayerMovement() {
-    // Check if the player is on blocks with IDs 33 to 48
     let standingOnSpecialBlocks = false;
+
     for (let i = 0; i < blocks.length; i++) {
-        if (ball.collide(blocks[i]) && blocks[i].id >= 33 && blocks[i].id <= 48) {
+        if (
+            ball.collide(blocks[i]) &&
+            ((blocks[i].id >= 33 && blocks[i].id <= 48) || (blocks[i].id >= 49 && blocks[i].id <= 64))
+        ) {
             standingOnSpecialBlocks = true;
-            break;
+
+            // Check if the player is just starting to stand on special blocks
+            if (ball.y > prevPlayerY) {
+                movedUpwards = true;
+            }
+
+            prevPlayerY = ball.y; // Update prevPlayerY
         }
     }
 
-    if (ball.y > prevPlayerY && standingOnSpecialBlocks) {
-        moveBlocksAndClouds(4); // Move blocks and clouds up by 4 pixels
+    // Check if the player has moved upwards in the current frame
+    if (movedUpwards && standingOnSpecialBlocks) {
+        moveBlocksAndClouds(10);
+        
     }
-    prevPlayerY = ball.y;
 }
+
+
 function moveBlocksAndClouds(dy) {
     // Move blocks and clouds only when dy is positive (upwards)
     if (dy > 0) {
         for (let i = 0; i < blocks.length; i++) {
             // Move all blocks
-            if (blocks[i].position.y < blocks[i].originalPosition.y + 200) {
+            if (blocks[i].position.y < blocks[i].originalPosition.y + 450) {
                 blocks[i].position.y += dy;
             }
         }
 
         for (let i = 0; i < clouds.length; i++) {
             // Move all clouds
-            if (clouds[i].position.y < clouds[i].originalPosition.y + 200) {
+            if (clouds[i].position.y < clouds[i].originalPosition.y + 450) {
                 clouds[i].position.y += dy;
             }
         }
     }
 }
-
-
 
 function setBlockCloudMovementSpeed(speed) {
     blockCloudMovementSpeed = speed;
@@ -277,7 +290,7 @@ function createGameLevelScene(level) {
                         ball.jumping = false;
 
                         if (updateBlockCloudPositions) {
-                            moveBlocksAndClouds(-8);
+                            moveBlocksAndClouds(-4);
                         }
                     } else {
                         ball.velocityY = 0;
@@ -301,7 +314,7 @@ function createGameLevelScene(level) {
                         ball.jumping = false;
 
                         if (updateBlockCloudPositions) {
-                            moveBlocksAndClouds(-8);
+                            moveBlocksAndClouds(-4);
                         }
 
                         removedBlocks.push({ id: blocks[i].id, block: blocks.splice(i, 1)[0] });
