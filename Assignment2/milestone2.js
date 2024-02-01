@@ -16,6 +16,8 @@ let removedBlocks = [];
 let mainCharacterImage;
 let facingLeft = true;
 let isFacingRight = true;
+let prevPlayerY = 0;
+let blockCloudMovementSpeed = 2;
 function preload() {
     mainCharacterImage = loadImage('maincharacter.png');
     cloudImage = loadImage('cloud.png');
@@ -60,15 +62,19 @@ function draw() {
     }
     ball.update();
     ball.display();
+    checkPlayerMovement();
+    moveBlocksAndClouds(0);
 }
 
 function createCloud(x, y, width, height) {
     let cloud = new Cloud(x, y, width, height);
+    cloud.originalPosition = createVector(x, y); // Store the original position
     return cloud;
 }
 
 function createBlock(id, x, y, width, height) {
     let block = new Block(id, x, y, width, height, 'static');
+    block.originalPosition = createVector(x, y); // Store the original position
     return block;
 }
 
@@ -152,34 +158,54 @@ function createBall() {
     let newBall = new Ball();
     return newBall;
 }
+function checkPlayerMovement() {
+    // Check if the player is on blocks with IDs 33 to 48
+    let standingOnSpecialBlocks = false;
+    for (let i = 0; i < blocks.length; i++) {
+        if (ball.collide(blocks[i]) && blocks[i].id >= 33 && blocks[i].id <= 48) {
+            standingOnSpecialBlocks = true;
+            break;
+        }
+    }
+
+    if (ball.y > prevPlayerY && standingOnSpecialBlocks) {
+        moveBlocksAndClouds(4); // Move blocks and clouds up by 4 pixels
+    }
+    prevPlayerY = ball.y;
+}
+function moveBlocksAndClouds(dy) {
+    // Move blocks and clouds only when dy is positive (upwards)
+    if (dy > 0) {
+        for (let i = 0; i < blocks.length; i++) {
+            // Move all blocks
+            if (blocks[i].position.y < blocks[i].originalPosition.y + 200) {
+                blocks[i].position.y += dy;
+            }
+        }
+
+        for (let i = 0; i < clouds.length; i++) {
+            // Move all clouds
+            if (clouds[i].position.y < clouds[i].originalPosition.y + 200) {
+                clouds[i].position.y += dy;
+            }
+        }
+    }
+}
+
+
+
+function setBlockCloudMovementSpeed(speed) {
+    blockCloudMovementSpeed = speed;
+}
 
 function checkGravityCondition() {
-    let onBlock = false;
-
-    for (let i = 0; i < blocks.length; i++) {
-        if (ball.y + ball.height > blocks[i].position.y && ball.collide(blocks[i])) {
-            onBlock = true;
-            break;
-        }
-    }
-
-    let onCloud = false;
-    for (let i = 0; i < clouds.length; i++) {
-        if (ball.y + ball.height > clouds[i].position.y && ball.collide(clouds[i])) {
-            onCloud = true;
-            break;
-        }
-    }
-
-    if (!onBlock) {
+    if (ball.y + ball.height > 0) {
         ball.gravity = 0.2;
     } else {
         ball.gravity = 0;
         ball.jumping = false;
     }
 }
-
-
 
 function createGameLevelScene(level) {
     ball = createBall();
@@ -217,6 +243,28 @@ function createGameLevelScene(level) {
 
         // Check if the ball is higher than the blocks and outside block's X range
         checkGravityCondition();
+
+        let updateBlockCloudPositions = true;
+
+        // Check if the player is on the floor
+        if (ball.y === height - ball.height) {
+            if (updateBlockCloudPositions) {
+                // Reset the positions of blocks to their original positions
+                for (let i = 0; i < blocks.length; i++) {
+                    blocks[i].position.y = blocks[i].originalPosition.y;
+                }
+
+                // Reset the positions of clouds to their original positions
+                for (let i = 0; i < clouds.length; i++) {
+                    clouds[i].position.y = clouds[i].originalPosition.y;
+                }
+
+                updateBlockCloudPositions = false; // Set the flag to false to prevent continuous updates
+            }
+        } else {
+            updateBlockCloudPositions = true; // Reset the flag when the player is not on the floor
+        }
+
         // Display clouds
         for (let i = 0; i < clouds.length; i++) {
             if (clouds[i]) {
@@ -227,6 +275,10 @@ function createGameLevelScene(level) {
                     if (ball.y + ball.height / 2 > clouds[i].position.y) {
                         ball.velocityY = 0;
                         ball.jumping = false;
+
+                        if (updateBlockCloudPositions) {
+                            moveBlocksAndClouds(-8);
+                        }
                     } else {
                         ball.velocityY = 0;
                         ball.gravity = 0;
@@ -236,17 +288,22 @@ function createGameLevelScene(level) {
                 }
             }
         }
+
         // Display blocks
         for (let i = 0; i < blocks.length; i++) {
             if (blocks[i]) {
                 blocks[i].display();
+
                 if (ball.collide(blocks[i])) {
                     // Check if the ball is above the block
                     if (ball.y + ball.height / 2 > blocks[i].position.y) {
                         ball.velocityY = 0;
                         ball.jumping = false;
 
-                        // Store the removed block with its ID
+                        if (updateBlockCloudPositions) {
+                            moveBlocksAndClouds(-8);
+                        }
+
                         removedBlocks.push({ id: blocks[i].id, block: blocks.splice(i, 1)[0] });
                     } else {
                         ball.velocityY = 0;
@@ -257,11 +314,11 @@ function createGameLevelScene(level) {
                 }
             }
         }
+
         refreshRemainingBlocks();
-
     };
-
 }
+
 function refreshRemainingBlocks() {
     for (let i = 0; i < removedBlocks.length; i++) {
         blocks.push(createBlock(removedBlocks[i].id));
@@ -377,7 +434,6 @@ class Ball {
         this.velocityY += this.gravity;
         this.y += this.velocityY;
 
-        // Move horizontally based on direction
         this.velocityX = this.direction * 2; // Adjusted velocityX to slow down
         this.x += this.velocityX;
 
@@ -447,9 +503,9 @@ class Ball {
 
     jump() {
         if (!this.jumping) {
-            this.velocityY = -7; 
+            this.velocityY = -7;
             this.jumping = true;
-            this.gravity = 0.1; 
+            this.gravity = 0.1;
         }
     }
 
