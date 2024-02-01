@@ -14,7 +14,8 @@ let cloudImage;
 let clouds = [];
 let removedBlocks = [];
 let mainCharacterImage;
-
+let facingLeft = true;
+let isFacingRight = true;
 function preload() {
     mainCharacterImage = loadImage('maincharacter.png');
     cloudImage = loadImage('cloud.png');
@@ -82,8 +83,12 @@ function keyPressed() {
     } else if (keyCode === 87) {
         // Spacebar for jumping
         jumpKey = true;
+    } else if (keyCode === 32) {
+        // Spacebar for attacking
+        ball.attack();
     }
 }
+
 
 function keyReleased() {
     if (keyCode === 65) {
@@ -167,7 +172,7 @@ function checkGravityCondition() {
     }
 
     if (!onBlock) {
-        ball.gravity = 0.4;
+        ball.gravity = 0.2;
     } else {
         ball.gravity = 0;
         ball.jumping = false;
@@ -316,7 +321,7 @@ class Block {
 class Cloud {
     constructor(x, y, width, height) {
         this.position = createVector(x, y);
-        this.width = width;
+        this.width = 150;
         this.height = height;
         this.cloudImage = loadImage('cloud.png'); // Load cloud image
     }
@@ -331,8 +336,7 @@ class Cloud {
     }
 
     display() {
-        // Display the cloud using the loaded image
-        image(this.cloudImage, this.position.x, this.position.y, this.width, this.height);
+        image(this.cloudImage, this.position.x, this.position.y, 150, this.height);
     }
 }
 
@@ -340,30 +344,34 @@ class Ball {
     constructor() {
         this.x = width / 2;
         this.y = height - 50;
-        this.width = 100;
-        this.height = 100;
+        this.width = 30;
+        this.height = 50;
         this.velocityX = 0;
         this.velocityY = 0;
-        this.gravity = 0.2; // Adjusted gravity to slow down
+        this.gravity = 0.01;
         this.jumping = false;
-        this.walkRightFrames = Array.from({ length: 2 }, (_, i) =>
+        this.walkRightFrames = Array.from({ length: 3 }, (_, i) =>
+            loadImage(`rightwalk${i + 1}.png`)
+        );
+        this.walkLeftFrames = Array.from({ length: 3 }, (_, i) =>
             loadImage(`leftwalk${i + 1}.png`)
         );
-        this.walkLeftFrames = Array.from({ length: 2 }, (_, i) =>
-            loadImage(`leftwalk${i + 1}.png`)
-        );
-        this.jumpFrames = Array.from({ length: 5 }, (_, i) =>
+        this.jumpFrames = Array.from({ length: 3 }, (_, i) =>
             loadImage(`leftjump${i + 1}.png`)
         );
-
+        this.attackLeftFrames = Array.from({ length: 3 }, (_, i) =>
+            loadImage(`leftattack${i + 1}.png`)
+        );
+        this.attackRightFrames = Array.from({ length: 3 }, (_, i) =>
+            loadImage(`rightattack${i + 1}.png`)
+        );
         // Animation properties
         this.currentFrame = 10;
-        this.animationSpeed = 0.05; // Set animation speed
+        this.animationSpeed = 0.05; // Set anidmation speed
 
         // Default animation is walking right
         this.animationFrames = this.walkRightFrames;
     }
-
     update() {
         // Apply gravity
         this.velocityY += this.gravity;
@@ -388,20 +396,38 @@ class Ball {
         // Check for animation change (jumping or walking)
         if (this.jumping) {
             this.animationFrames = this.jumpFrames;
+        } else if (this.attacking) {
+            this.animationFrames = facingLeft
+                ? this.attackLeftFrames
+                : this.attackRightFrames;
         } else if (this.direction === 1) {
             this.animationFrames = this.walkRightFrames;
+            facingLeft = false;
+
         } else if (this.direction === -1) {
             this.animationFrames = this.walkLeftFrames;
+            facingLeft = true;
         } else {
-            // If not jumping and not moving, use the main character image
             this.animationFrames = [mainCharacterImage];
         }
-
         if (this.currentFrame >= this.animationFrames.length) {
             this.currentFrame = 0;
+            this.attacking = false;
+        }
+        
+    }
+    attack() {
+        if (!this.attacking) {
+            this.attacking = true;
+            this.animationFrames = facingLeft
+                ? this.attackLeftFrames
+                : this.attackRightFrames;
         }
     }
-
+    setDirection(dir) {
+        this.direction = dir;
+        this.velocityX = this.direction * 2;
+    }
     display() {
         // Display the current frame of the animation
         let currentFrameIndex = floor(this.currentFrame) % this.animationFrames.length;
@@ -421,9 +447,9 @@ class Ball {
 
     jump() {
         if (!this.jumping) {
-            this.velocityY = -8; 
+            this.velocityY = -7; 
             this.jumping = true;
-            this.gravity = 0.2; 
+            this.gravity = 0.1; 
         }
     }
 
