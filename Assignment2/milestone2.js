@@ -37,6 +37,7 @@ function preload() {
     galaxyLoopSound = loadSound('Galaxy-Loop.mp3');
     riseMusic =  loadSound('Rise01.mp3');
     riseMusic3 = loadSound('Rise03.mp3');
+
 }
 
 function setup() {
@@ -100,7 +101,11 @@ function createBlock(id, x, y, width, height) {
     block.originalPosition = createVector(x, y); // Store the original position
     return block;
 }
-
+function createIceBlock(id, x, y, width, height) {
+    let block = new IceBlock(id, x, y, width, height, 'static');
+    block.originalPosition = createVector(x, y); 
+    return block;
+}
 function keyPressed() {
     if (keyCode === 65) {
         leftKey = true;
@@ -277,12 +282,18 @@ function createGameLevelScene(level) {
     removedBlocks = [];
 
     loadJSON(`level${level}.json`, function (data) {
-        if (data.blocks && Array.isArray(data.blocks)) {
+        if (level ==1 && data.blocks && Array.isArray(data.blocks)) {
             for (let i = 0; i < data.blocks.length; i++) {
                 let block = createBlock(i, data.blocks[i].x, data.blocks[i].y, 50, 20);
                 blocks.push(block);
             }
-        } else {
+        } else if(level == 2 && data.blocks && Array.isArray(data.blocks)){
+            for (let i = 0; i < data.blocks.length; i++) {
+                let block = createIceBlock(i, data.blocks[i].x, data.blocks[i].y, 50, 20);
+                blocks.push(block);
+            }
+        }
+        else {
             console.error('Invalid JSON format. Missing or incorrect "blocks" array.');
         }
 
@@ -455,9 +466,16 @@ function createLeaderboardScene() {
         text("Leaderboard", width / 2 - 80, height / 2);
     };
 }
+function resetGame() {
+    ball = createBall();
+    blocks = [];
+    clouds = [];
+    flags = [];
+    removedBlocks = [];
+    floor1 = 600;
+    currentScene = mainMenuScene;
 
-
-
+}
 class Flag {
     constructor(x, y, width, height) {
         this.position = createVector(x, y);
@@ -468,19 +486,6 @@ class Flag {
 
     display() {
         image(this.flagImage, this.position.x, this.position.y, this.width, this.height);
-    }
-}
-class Block {
-    constructor(id, x, y, width, height) {
-        this.id = id; // Add id property
-        this.position = createVector(x, y);
-        this.width = width;
-        this.height = height;
-        this.blockImage = loadImage('mud.png'); // Load block image
-    }
-
-    display() {
-        image(this.blockImage, this.position.x, this.position.y, this.width, this.height);
     }
 }
 
@@ -660,13 +665,28 @@ class Sprite {
         return false;
     }
 }
-function resetGame() {
-    ball = createBall();
-    blocks = [];
-    clouds = [];
-    flags = [];
-    removedBlocks = [];
-    floor1 = 600;
-    currentScene = mainMenuScene;
+class IceBlock {
+    constructor(id,x, y, width, height) {
+        this.id = id;
+        this.position = createVector(x, y);
+        this.width = width;
+        this.height = height;
+        this.iceBlockImage = loadImage('iceblock.png');; 
+    }
+    display() {
+        image(this.iceBlockImage, this.position.x, this.position.y, this.width, this.height);
+    }
+}
+class Block {
+    constructor(id, x, y, width, height) {
+        this.id = id; // Add id property
+        this.position = createVector(x, y);
+        this.width = width;
+        this.height = height;
+        this.blockImage = loadImage('mud.png'); // Load block image
+    }
 
+    display() {
+        image(this.blockImage, this.position.x, this.position.y, this.width, this.height);
+    }
 }
