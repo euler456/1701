@@ -11,7 +11,9 @@ let leftKey = false;
 let rightKey = false;
 let jumpKey = false;
 let cloudImage;
+let flagImage;
 let clouds = [];
+let flags = [];
 let removedBlocks = [];
 let mainCharacterImage;
 let facingLeft = true;
@@ -19,10 +21,22 @@ let isFacingRight = true;
 let prevPlayerY = 0;
 let movedUpwards = false;
 let blockCloudMovementSpeed = 2;
+let floor1 = 600;
+let galaxyLoopSound;
+let riseMusic;
+let riseMusic3;
+let backgroundImg;
+let cloudMusicPlayed = false;
+let selectedGameLevel = 0;
 
 function preload() {
+    backgroundImg = loadImage('Background.jpg');
     mainCharacterImage = loadImage('maincharacter.png');
     cloudImage = loadImage('cloud.png');
+    flagImage = loadImage('flag.png');
+    galaxyLoopSound = loadSound('Galaxy-Loop.mp3');
+    riseMusic =  loadSound('Rise01.mp3');
+    riseMusic3 = loadSound('Rise03.mp3');
 }
 
 function setup() {
@@ -30,13 +44,15 @@ function setup() {
     loadingScene = createLoadingScene();
     mainMenuScene = createMainMenuScene();
     gameLevel1Scene = createGameLevelScene(1);
-    gameLevel2Scene = createGameLevelScene(2);
+    gameLevel2Scene = createGameLevelScene(1);
     leaderboardScene = createLeaderboardScene();
-
     currentScene = mainMenuScene; // Set the initial scene to the main menu
+    galaxyLoopSound.play();
 }
 
 function draw() {
+    background(0);
+    image(backgroundImg, 0, 0, width, height);
     if (currentScene === loadingScene) {
         loadingScene();
     } else if (currentScene === mainMenuScene) {
@@ -73,6 +89,11 @@ function createCloud(x, y, width, height) {
     cloud.originalPosition = createVector(x, y); // Store the original position
     return cloud;
 }
+function createFlag(x, y, width, height) {
+    let flag = new Flag(x, y, width, height);
+    flag.originalPosition = createVector(x, y); // Store the original position
+    return flag;
+}
 
 function createBlock(id, x, y, width, height) {
     let block = new Block(id, x, y, width, height, 'static');
@@ -81,18 +102,13 @@ function createBlock(id, x, y, width, height) {
 }
 
 function keyPressed() {
-    // Set flags when keys are pressed
     if (keyCode === 65) {
-        // A key for moving left
         leftKey = true;
     } else if (keyCode === 68) {
-        // D key for moving right
         rightKey = true;
     } else if (keyCode === 87) {
-        // Spacebar for jumping
         jumpKey = true;
     } else if (keyCode === 32) {
-        // Spacebar for attacking
         ball.attack();
     }
 }
@@ -110,6 +126,7 @@ function keyReleased() {
 
 function mouseClicked() {
     currentScene.mouseClicked && currentScene.mouseClicked();
+    
 }
 
 function createLoadingScene() {
@@ -117,10 +134,10 @@ function createLoadingScene() {
         background(255);
         textSize(32);
         text("Loading...", width / 2 - 80, height / 2);
-
         setTimeout(() => {
-            currentScene = gameLevel1Scene;
+                currentScene = gameLevel1Scene;
         }, 1000);
+
     };
 }
 
@@ -131,27 +148,49 @@ function createMainMenuScene() {
         textSize(32);
         text("Main Menu", width / 2 - 80, height / 2);
 
-        // Draw button directly without using draw function
+        // Draw "Play" button
         fill(200);
-        let buttonWidth = 100;
-        let buttonHeight = 40;
-        let buttonX = width / 2 - buttonWidth / 2;
-        let buttonY = height / 2 + 20;
+        let playButtonWidth = 150;
+        let playButtonHeight = 40;
+        let playButtonX = width / 2 - playButtonWidth / 2;
+        let playButtonY = height / 2 + 20;
 
-        rect(buttonX, buttonY, buttonWidth, buttonHeight);
+        rect(playButtonX, playButtonY, playButtonWidth, playButtonHeight);
         fill(0);
         textSize(20);
-        text("Play", buttonX + 10, buttonY + 25); // Adjusted y position
+        text("Game Level1", playButtonX + 10, playButtonY + 25);
 
-        // Handle button click
+        // Draw "Game Level 2" button
+        fill(200);
+        let level2ButtonWidth = 150;
+        let level2ButtonHeight = 40;
+        let level2ButtonX = width / 2 - level2ButtonWidth / 2;
+        let level2ButtonY = height / 2 + 80;
+
+        rect(level2ButtonX, level2ButtonY, level2ButtonWidth, level2ButtonHeight);
+        fill(0);
+        textSize(20);
+        text("Game Level 2", level2ButtonX + 10, level2ButtonY + 25);
+
+        // Handle button clicks
         if (
-            mouseX > buttonX &&
-            mouseX < buttonX + buttonWidth &&
-            mouseY > buttonY &&
-            mouseY < buttonY + buttonHeight &&
+            mouseX > playButtonX &&
+            mouseX < playButtonX + playButtonWidth &&
+            mouseY > playButtonY &&
+            mouseY < playButtonY + playButtonHeight &&
             mouseIsPressed
         ) {
             playButtonClicked();
+        }
+
+        if (
+            mouseX > level2ButtonX &&
+            mouseX < level2ButtonX + level2ButtonWidth &&
+            mouseY > level2ButtonY &&
+            mouseY < level2ButtonY + level2ButtonHeight &&
+            mouseIsPressed
+        ) {
+            level2ButtonClicked();
         }
     };
 }
@@ -170,40 +209,35 @@ function checkPlayerMovement() {
             ((blocks[i].id >= 33 && blocks[i].id <= 48) || (blocks[i].id >= 49 && blocks[i].id <= 64))
         ) {
             standingOnSpecialBlocks = true;
-
             // Check if the player is just starting to stand on special blocks
             if (ball.y > prevPlayerY) {
                 movedUpwards = true;
             }
-
-            prevPlayerY = ball.y; // Update prevPlayerY
+            prevPlayerY = ball.y; 
         }
     }
-
-    // Check if the player has moved upwards in the current frame
     if (movedUpwards && standingOnSpecialBlocks) {
         moveBlocksAndClouds(10);
         
     }
 }
-
-
 function moveBlocksAndClouds(dy) {
-    // Move blocks and clouds only when dy is positive (upwards)
     if (dy > 0) {
         for (let i = 0; i < blocks.length; i++) {
-            // Move all blocks
             if (blocks[i].position.y < blocks[i].originalPosition.y + 450) {
                 blocks[i].position.y += dy;
             }
         }
-
         for (let i = 0; i < clouds.length; i++) {
-            // Move all clouds
             if (clouds[i].position.y < clouds[i].originalPosition.y + 450) {
                 clouds[i].position.y += dy;
             }
         }
+        if (flags[0].position.y < flags[0].originalPosition.y + 450) {
+            flags[0].position.y += dy;
+        }            
+
+        floor1 += 475;
     }
 }
 
@@ -219,14 +253,30 @@ function checkGravityCondition() {
         ball.jumping = false;
     }
 }
+function playButtonClicked() {
+    selectedGameLevel = 1;
+    createGameLevelScene(1);
+    setTimeout(() => {
+        currentScene = gameLevel1Scene;
+    }, 1000);
+}
 
+function level2ButtonClicked() {
+    selectedGameLevel = 2;
+    createGameLevelScene(2);
+    setTimeout(() => {
+        currentScene = gameLevel2Scene;
+    }, 1000);
+}
 function createGameLevelScene(level) {
+    console.log(level);
     ball = createBall();
     blocks = [];
     clouds = [];
+    flags = [];
+    removedBlocks = [];
 
     loadJSON(`level${level}.json`, function (data) {
-        // Parse the JSON data
         if (data.blocks && Array.isArray(data.blocks)) {
             for (let i = 0; i < data.blocks.length; i++) {
                 let block = createBlock(i, data.blocks[i].x, data.blocks[i].y, 50, 20);
@@ -234,6 +284,13 @@ function createGameLevelScene(level) {
             }
         } else {
             console.error('Invalid JSON format. Missing or incorrect "blocks" array.');
+        }
+
+        if (data.flags && Array.isArray(data.flags)) {
+            for (let i = 0; i < data.flags.length; i++) {
+                let flag = createFlag(data.flags[i].x, data.flags[i].y, 50, 50);
+                flags.push(flag);
+            }
         }
 
         if (data.clouds && Array.isArray(data.clouds)) {
@@ -248,19 +305,17 @@ function createGameLevelScene(level) {
     }, 'json');
 
     return function gameLevelScene() {
-        background(120);
+        image(backgroundImg, 0, 0, width, height);
         fill(255);
 
         ball.update();
         ball.display();
-
-        // Check if the ball is higher than the blocks and outside block's X range
         checkGravityCondition();
 
         let updateBlockCloudPositions = true;
 
         // Check if the player is on the floor
-        if (ball.y === height - ball.height) {
+        if (ball.y === floor1) {
             if (updateBlockCloudPositions) {
                 // Reset the positions of blocks to their original positions
                 for (let i = 0; i < blocks.length; i++) {
@@ -271,15 +326,40 @@ function createGameLevelScene(level) {
                 for (let i = 0; i < clouds.length; i++) {
                     clouds[i].position.y = clouds[i].originalPosition.y;
                 }
-
-                updateBlockCloudPositions = false; // Set the flag to false to prevent continuous updates
+                flags[0].position.y = flags[0].originalPosition.y;
+                console.log(flags[0].position.y);
+                updateBlockCloudPositions = false;
             }
         } else {
-            updateBlockCloudPositions = true; // Reset the flag when the player is not on the floor
+            updateBlockCloudPositions = true;
+        }
+
+        // Display flags
+        for (let i = 0; i < flags.length; i++) {
+            if (flags[i]) {
+                flags[i].display();
+                if (ball.collide(flags[i])) {
+                    // Check if the ball is above the flag
+                    if (ball.y + ball.height / 2 > flags[i].position.y) {
+                        ball.velocityY = 0;
+                        ball.jumping = false;
+                
+                        if (updateBlockCloudPositions) {
+                            moveBlocksAndClouds(-4);
+                        }
+                        resetGame();
+                    } else {
+                        ball.velocityY = 0;
+                        ball.gravity = 0;
+                        ball.y = flags[i].position.y - ball.height;
+                        ball.jumping = false;
+                    }
+                }
+            }
         }
 
         // Display clouds
-        for (let i = 0; i < clouds.length; i++) {
+       for (let i = 0; i < clouds.length; i++) {
             if (clouds[i]) {
                 clouds[i].moveRight(2);
                 clouds[i].display();
@@ -292,7 +372,15 @@ function createGameLevelScene(level) {
                         if (updateBlockCloudPositions) {
                             moveBlocksAndClouds(-4);
                         }
+
+                        // Set the flag to false when player is not on the cloud
+                        cloudMusicPlayed = false;
                     } else {
+                        if (!cloudMusicPlayed) {
+                            riseMusic3.play();
+                            cloudMusicPlayed = true; // Set the flag to true when the music is played
+                        }
+
                         ball.velocityY = 0;
                         ball.gravity = 0;
                         ball.y = clouds[i].position.y - ball.height;
@@ -312,11 +400,11 @@ function createGameLevelScene(level) {
                     if (ball.y + ball.height / 2 > blocks[i].position.y) {
                         ball.velocityY = 0;
                         ball.jumping = false;
+                        riseMusic.play();
 
                         if (updateBlockCloudPositions) {
                             moveBlocksAndClouds(-4);
                         }
-
                         removedBlocks.push({ id: blocks[i].id, block: blocks.splice(i, 1)[0] });
                     } else {
                         ball.velocityY = 0;
@@ -327,10 +415,10 @@ function createGameLevelScene(level) {
                 }
             }
         }
-
         refreshRemainingBlocks();
     };
 }
+
 
 function refreshRemainingBlocks() {
     for (let i = 0; i < removedBlocks.length; i++) {
@@ -348,7 +436,6 @@ function checkCollision(obj1, obj2) {
 }
 
 function keyReleased() {
-    // Reset flags when keys are released
     if (keyCode === 65) {
         // A key for moving left
         leftKey = false;
@@ -369,11 +456,20 @@ function createLeaderboardScene() {
     };
 }
 
-function playButtonClicked() {
-    currentScene = loadingScene;
-    console.log("Switching to Loading Scene...");
-}
 
+
+class Flag {
+    constructor(x, y, width, height) {
+        this.position = createVector(x, y);
+        this.width = width;
+        this.height = height;
+        this.flagImage = loadImage('flag.png'); 
+    }
+
+    display() {
+        image(this.flagImage, this.position.x, this.position.y, this.width, this.height);
+    }
+}
 class Block {
     constructor(id, x, y, width, height) {
         this.id = id; // Add id property
@@ -398,8 +494,6 @@ class Cloud {
 
     moveRight(speed) {
         this.position.x += speed;
-
-        // Reset the cloud position if it goes beyond the canvas width
         if (this.position.x > 800) {
             this.position.x = 0;
         }
@@ -447,7 +541,7 @@ class Ball {
         this.velocityY += this.gravity;
         this.y += this.velocityY;
 
-        this.velocityX = this.direction * 2; // Adjusted velocityX to slow down
+        this.velocityX = this.direction * 2; 
         this.x += this.velocityX;
 
         // Keep the character within the canvas
@@ -534,8 +628,6 @@ class Ball {
         return false;
     }
 }
-
-
 class Sprite {
     constructor(x, y, width, height, type = 'dynamic') {
         this.position = createVector(x, y);
@@ -568,20 +660,13 @@ class Sprite {
         return false;
     }
 }
+function resetGame() {
+    ball = createBall();
+    blocks = [];
+    clouds = [];
+    flags = [];
+    removedBlocks = [];
+    floor1 = 600;
+    currentScene = mainMenuScene;
 
-// Add an update method to the Sprite class
-Sprite.prototype.update = function () {
-    // Apply gravity
-    this.velocity.y += 0.4;
-    this.position.y += this.velocity.y;
-
-    // Keep the ball within the canvas
-    this.position.x = constrain(this.position.x, this.width / 2, width - this.width / 2);
-    this.position.y = constrain(this.position.y, this.height / 2, height - this.height / 2);
-
-    // Check if the ball is on the ground
-    if (this.position.y === height - this.height / 2) {
-        this.jumping = false;
-        this.velocity.y = 0;
-    }
-};
+}
