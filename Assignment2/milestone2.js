@@ -507,7 +507,8 @@ function keyReleased() {
 
 function createLeaderboardScene() {
     return function () {
-        background(50, 100, 200);
+        image(IceMount, 50, 0, width, height);
+        tint(255, 180); 
         image(IceMount, 0, 0, width, height);
         fill(0);
         textSize(32);
