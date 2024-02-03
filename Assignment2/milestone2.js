@@ -484,14 +484,7 @@ function refreshRemainingBlocks() {
     }
     removedBlocks = [];
 }
-function checkCollision(obj1, obj2) {
-    return (
-        obj1.x < obj2.position.x + obj2.width &&
-        obj1.x + obj1.width > obj2.position.x &&
-        obj1.y < obj2.position.y + obj2.height &&
-        obj1.y + obj1.height > obj2.position.y
-    );
-}
+
 
 function keyReleased() {
     if (keyCode === 65) {
@@ -501,12 +494,14 @@ function keyReleased() {
     } else if (keyCode === 68) {
         // D key for moving right
         rightKey = false;
-        ball.setDirection(0); // Set direction to 0 when the right key is released
+        ball.setDirection(0); 
     }
 }
 
 function createLeaderboardScene() {
+   
     return function () {
+        ButtonHide();
         image(IceMount, 50, 0, width, height);
         tint(255, 180); 
         image(IceMount, 0, 0, width, height);
@@ -614,11 +609,8 @@ class Ball {
         this.attackRightFrames = Array.from({ length: 3 }, (_, i) =>
             loadImage(`rightattack${i + 1}.png`)
         );
-        // Animation properties
         this.currentFrame = 10;
-        this.animationSpeed = 0.05; // Set anidmation speed
-
-        // Default animation is walking right
+        this.animationSpeed = 0.05; 
         this.animationFrames = this.walkRightFrames;
     }
     update() {
@@ -641,7 +633,7 @@ class Ball {
         // Update animation frame
         this.currentFrame += this.animationSpeed;
 
-        // Check for animation change (jumping or walking)
+        // Check for animation change
         if (this.jumping) {
             this.animationFrames = this.jumpFrames;
         } else if (this.attacking) {
@@ -686,11 +678,6 @@ class Ball {
             this.width,
             this.height
         );
-    }
-
-    setDirection(dir) {
-        this.direction = dir;
-        this.velocityX = this.direction * 2; 
     }
 
     jump() {
@@ -759,11 +746,11 @@ class IceBlock {
 }
 class Block {
     constructor(id, x, y, width, height) {
-        this.id = id; // Add id property
+        this.id = id; 
         this.position = createVector(x, y);
         this.width = width;
         this.height = height;
-        this.blockImage = loadImage('mud.png'); // Load block image
+        this.blockImage = loadImage('mud.png'); 
     }
 
     display() {
@@ -776,7 +763,7 @@ class Bonus {
         this.position = createVector(x, y);
         this.width = width;
         this.height = height;
-        this.bonusImage = loadImage('orange.png'); // Load bonus image
+        this.bonusImage = loadImage('orange.png'); 
     }
 
     display() {
