@@ -254,6 +254,7 @@ function createGameLevelScene(level) {
     blocks = [];
     clouds = [];
     flags = [];
+    bonuses = [];
     removedBlocks = [];
 
     loadJSON(`level${level}.json`, function (data) {
