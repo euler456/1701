@@ -37,7 +37,7 @@ let totalScoreText;
 let backButtonPressed = false;
 let video;
 let bonuses = [];
-
+let bonusSound;
 function preload() {
     backgroundImg = loadImage('Background.jpg');
     IceMount = loadImage('icemount.png');
@@ -48,6 +48,7 @@ function preload() {
     riseMusic =  loadSound('Rise01.mp3');
     riseMusic3 = loadSound('Rise03.mp3');
     video = createVideo('icemountvedio.mp4');
+    bonusSound = loadSound('Rise05.mp3');
 }
 
 function setup() {
@@ -58,8 +59,6 @@ function setup() {
     gameLevel2Scene = createGameLevelScene(2);
     leaderboardScene = createLeaderboardScene();
     currentScene = mainMenuScene;
-
-
     galaxyLoopSound.play();
     video.size(width, height);
     video.hide(); 
@@ -363,6 +362,7 @@ function createGameLevelScene(level) {
                 if (ball.collide(bonuses[i])) {
                     if (ball.y + ball.height / 2 > bonuses[i].position.y) {
                         playerScore += 200;
+                        bonusSound.play(); 
                         bonuses.splice(i, 1);
                     } else {
                         ball.velocityY = 0;
