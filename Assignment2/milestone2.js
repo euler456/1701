@@ -259,12 +259,12 @@ function createGameLevelScene(level) {
     removedBlocks = [];
 
     loadJSON(`level${level}.json`, function (data) {
-        if (level ==1 && data.blocks && Array.isArray(data.blocks)) {
+        if (level ==1 && data.blocks ) {
             for (let i = 0; i < data.blocks.length; i++) {
                 let block = createBlock(i, data.blocks[i].x, data.blocks[i].y, 50, 20);
                 blocks.push(block);
             }
-        } else if(level == 2 && data.blocks && Array.isArray(data.blocks)){
+        } else if(level == 2 && data.blocks){
             for (let i = 0; i < data.blocks.length; i++) {
                 let block = createIceBlock(i, data.blocks[i].x, data.blocks[i].y, 50, 20);
                 blocks.push(block);
@@ -274,13 +274,13 @@ function createGameLevelScene(level) {
             console.error('Invalid JSON format. Missing or incorrect "blocks" array.');
         }
 
-        if (data.flags && Array.isArray(data.flags)) {
+        if (data.flags) {
             for (let i = 0; i < data.flags.length; i++) {
                 let flag = createFlag(data.flags[i].x, data.flags[i].y, 50, 50);
                 flags.push(flag);
             }
         }
-        if (data.bonuses && Array.isArray(data.bonuses)) {
+        if (data.bonuses) {
             for (let i = 0; i < data.bonuses.length; i++) {
                 let bonus = createBonus(data.bonuses[i].x, data.bonuses[i].y, 30, 30);
                 bonus.originalPosition = createVector(data.bonuses[i].x, data.bonuses[i].y);
@@ -290,7 +290,7 @@ function createGameLevelScene(level) {
             console.error('Invalid JSON format. Missing or incorrect "bonuses" array.');
         }
     
-        if (data.clouds && Array.isArray(data.clouds)) {
+        if (data.clouds) {
             for (let i = 0; i < data.clouds.length; i++) {
                 let cloud = createCloud(data.clouds[i].x, data.clouds[i].y, 80, 20);
                 clouds.push(cloud);
