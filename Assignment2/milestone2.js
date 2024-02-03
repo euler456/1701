@@ -5,6 +5,9 @@ let gameLevel2Scene;
 let leaderboardScene;
 let currentScene;
 let playButton;
+let level2Button;
+let leaderboardButton;
+let backButton;
 let ball;
 let blocks = [];
 let leftKey = false;
@@ -28,16 +31,23 @@ let riseMusic3;
 let backgroundImg;
 let cloudMusicPlayed = false;
 let selectedGameLevel = 0;
+let IceMount;
+let playerScore = 0;
+let totalScoreText;
+let backButtonPressed = false;
+let video;
+let bonuses = [];
 
 function preload() {
     backgroundImg = loadImage('Background.jpg');
+    IceMount = loadImage('icemount.png');
     mainCharacterImage = loadImage('maincharacter.png');
     cloudImage = loadImage('cloud.png');
     flagImage = loadImage('flag.png');
     galaxyLoopSound = loadSound('Galaxy-Loop.mp3');
     riseMusic =  loadSound('Rise01.mp3');
     riseMusic3 = loadSound('Rise03.mp3');
-
+    video = createVideo('icemountvedio.mp4');
 }
 
 function setup() {
@@ -45,10 +55,17 @@ function setup() {
     loadingScene = createLoadingScene();
     mainMenuScene = createMainMenuScene();
     gameLevel1Scene = createGameLevelScene(1);
-    gameLevel2Scene = createGameLevelScene(1);
+    gameLevel2Scene = createGameLevelScene(2);
     leaderboardScene = createLeaderboardScene();
-    currentScene = mainMenuScene; // Set the initial scene to the main menu
+    currentScene = mainMenuScene;
+
+
     galaxyLoopSound.play();
+    video.size(width, height);
+    video.hide(); 
+    video.loop();
+    video.muted = true;
+
 }
 
 function draw() {
@@ -64,6 +81,10 @@ function draw() {
         gameLevel2Scene();
     } else if (currentScene === leaderboardScene) {
         leaderboardScene();
+        if (backButtonPressed) {
+            backButtonPressed = false;
+            currentScene = mainMenuScene; // Transition back to the main menu
+        }
     }
 
     // Check for key states continuously
@@ -87,18 +108,22 @@ function draw() {
 
 function createCloud(x, y, width, height) {
     let cloud = new Cloud(x, y, width, height);
-    cloud.originalPosition = createVector(x, y); // Store the original position
+    cloud.originalPosition = createVector(x, y);
     return cloud;
 }
 function createFlag(x, y, width, height) {
     let flag = new Flag(x, y, width, height);
-    flag.originalPosition = createVector(x, y); // Store the original position
+    flag.originalPosition = createVector(x, y); 
     return flag;
+}
+
+function createBonus(x, y, width, height) {
+    return new Bonus(x, y, width, height);
 }
 
 function createBlock(id, x, y, width, height) {
     let block = new Block(id, x, y, width, height, 'static');
-    block.originalPosition = createVector(x, y); // Store the original position
+    block.originalPosition = createVector(x, y);
     return block;
 }
 function createIceBlock(id, x, y, width, height) {
@@ -130,120 +155,63 @@ function keyReleased() {
 }
 
 function mouseClicked() {
-    currentScene.mouseClicked && currentScene.mouseClicked();
-    
+    if (video) {
+        video.play();
+    }    
 }
 
 function createLoadingScene() {
     return function () {
         background(255);
         textSize(32);
+        ButtonHide();
         text("Loading...", width / 2 - 80, height / 2);
         setTimeout(() => {
                 currentScene = gameLevel1Scene;
-        }, 1000);
+        }, 2000);
 
     };
 }
 
 function createMainMenuScene() {
+    playButton = createButton('Game Level 1');
+    playButton.position(width / 2 - 75, height / 2 + 20);
+    playButton.size(150, 40);
+    playButton.mousePressed(playButtonClicked);
+
+    level2Button = createButton('Game Level 2');
+    level2Button.position(width / 2 - 75, height / 2 + 80);
+    level2Button.size(150, 40);
+    level2Button.mousePressed(level2ButtonClicked);
+
+    leaderboardButton = createButton('Leaderboard');
+    leaderboardButton.position(width / 2 - 75, height / 2 + 140);
+    leaderboardButton.size(150, 40);
+    leaderboardButton.mousePressed(leaderboardButtonClicked);
+
     return function () {
         background(0);
-        fill(255);
+        image(video, 0, 0, width, height);
+
+        fill(0);
         textSize(32);
         text("Main Menu", width / 2 - 80, height / 2);
 
-        // Draw "Play" button
-        fill(200);
-        let playButtonWidth = 150;
-        let playButtonHeight = 40;
-        let playButtonX = width / 2 - playButtonWidth / 2;
-        let playButtonY = height / 2 + 20;
+        playButton.show();
+        level2Button.show();
+        leaderboardButton.show();
 
-        rect(playButtonX, playButtonY, playButtonWidth, playButtonHeight);
-        fill(0);
-        textSize(20);
-        text("Game Level1", playButtonX + 10, playButtonY + 25);
-
-        // Draw "Game Level 2" button
-        fill(200);
-        let level2ButtonWidth = 150;
-        let level2ButtonHeight = 40;
-        let level2ButtonX = width / 2 - level2ButtonWidth / 2;
-        let level2ButtonY = height / 2 + 80;
-
-        rect(level2ButtonX, level2ButtonY, level2ButtonWidth, level2ButtonHeight);
-        fill(0);
-        textSize(20);
-        text("Game Level 2", level2ButtonX + 10, level2ButtonY + 25);
-
-        // Handle button clicks
-        if (
-            mouseX > playButtonX &&
-            mouseX < playButtonX + playButtonWidth &&
-            mouseY > playButtonY &&
-            mouseY < playButtonY + playButtonHeight &&
-            mouseIsPressed
-        ) {
-            playButtonClicked();
-        }
-
-        if (
-            mouseX > level2ButtonX &&
-            mouseX < level2ButtonX + level2ButtonWidth &&
-            mouseY > level2ButtonY &&
-            mouseY < level2ButtonY + level2ButtonHeight &&
-            mouseIsPressed
-        ) {
-            level2ButtonClicked();
-        }
     };
 }
-
+function ButtonHide(){
+    console.log("Button hide")
+    playButton.hide();
+    level2Button.hide();
+    leaderboardButton.hide();
+}
 function createBall() {
     let newBall = new Ball();
     return newBall;
-}
-
-function checkPlayerMovement() {
-    let standingOnSpecialBlocks = false;
-
-    for (let i = 0; i < blocks.length; i++) {
-        if (
-            ball.collide(blocks[i]) &&
-            ((blocks[i].id >= 33 && blocks[i].id <= 48) || (blocks[i].id >= 49 && blocks[i].id <= 64))
-        ) {
-            standingOnSpecialBlocks = true;
-            // Check if the player is just starting to stand on special blocks
-            if (ball.y > prevPlayerY) {
-                movedUpwards = true;
-            }
-            prevPlayerY = ball.y; 
-        }
-    }
-    if (movedUpwards && standingOnSpecialBlocks) {
-        moveBlocksAndClouds(10);
-        
-    }
-}
-function moveBlocksAndClouds(dy) {
-    if (dy > 0) {
-        for (let i = 0; i < blocks.length; i++) {
-            if (blocks[i].position.y < blocks[i].originalPosition.y + 450) {
-                blocks[i].position.y += dy;
-            }
-        }
-        for (let i = 0; i < clouds.length; i++) {
-            if (clouds[i].position.y < clouds[i].originalPosition.y + 450) {
-                clouds[i].position.y += dy;
-            }
-        }
-        if (flags[0].position.y < flags[0].originalPosition.y + 450) {
-            flags[0].position.y += dy;
-        }            
-
-        floor1 += 475;
-    }
 }
 
 function setBlockCloudMovementSpeed(speed) {
@@ -259,20 +227,27 @@ function checkGravityCondition() {
     }
 }
 function playButtonClicked() {
+    currentScene = loadingScene;
     selectedGameLevel = 1;
     createGameLevelScene(1);
     setTimeout(() => {
         currentScene = gameLevel1Scene;
     }, 1000);
 }
+function leaderboardButtonClicked() {
 
+    currentScene = leaderboardScene;
+}
 function level2ButtonClicked() {
+    currentScene = loadingScene;
     selectedGameLevel = 2;
     createGameLevelScene(2);
     setTimeout(() => {
         currentScene = gameLevel2Scene;
     }, 1000);
 }
+
+
 function createGameLevelScene(level) {
     console.log(level);
     ball = createBall();
@@ -303,9 +278,17 @@ function createGameLevelScene(level) {
                 flags.push(flag);
             }
         }
-
+        if (data.bonuses && Array.isArray(data.bonuses)) {
+            for (let i = 0; i < data.bonuses.length; i++) {
+                let bonus = createBonus(data.bonuses[i].x, data.bonuses[i].y, 30, 30);
+                bonus.originalPosition = createVector(data.bonuses[i].x, data.bonuses[i].y);
+                bonuses.push(bonus);
+            }
+        } else {
+            console.error('Invalid JSON format. Missing or incorrect "bonuses" array.');
+        }
+    
         if (data.clouds && Array.isArray(data.clouds)) {
-            // Use a loop to create clouds
             for (let i = 0; i < data.clouds.length; i++) {
                 let cloud = createCloud(data.clouds[i].x, data.clouds[i].y, 80, 20);
                 clouds.push(cloud);
@@ -332,7 +315,9 @@ function createGameLevelScene(level) {
                 for (let i = 0; i < blocks.length; i++) {
                     blocks[i].position.y = blocks[i].originalPosition.y;
                 }
-
+                for (let i = 0; i < bonuses.length; i++) {
+                    bonuses[i].position.y = bonuses[i].originalPosition.y;
+                }
                 // Reset the positions of clouds to their original positions
                 for (let i = 0; i < clouds.length; i++) {
                     clouds[i].position.y = clouds[i].originalPosition.y;
@@ -358,6 +343,7 @@ function createGameLevelScene(level) {
                         if (updateBlockCloudPositions) {
                             moveBlocksAndClouds(-4);
                         }
+                        playerScore += 1000;
                         resetGame();
                     } else {
                         ball.velocityY = 0;
@@ -368,7 +354,24 @@ function createGameLevelScene(level) {
                 }
             }
         }
-
+        // Display bonuses
+        for (let i = 0; i < bonuses.length; i++) {
+            if (bonuses[i]) {
+                bonuses[i].display();
+    
+                if (ball.collide(bonuses[i])) {
+                    if (ball.y + ball.height / 2 > bonuses[i].position.y) {
+                        playerScore += 200;
+                        bonuses.splice(i, 1);
+                    } else {
+                        ball.velocityY = 0;
+                        ball.gravity = 0;
+                        ball.y = bonuses[i].position.y - ball.height;
+                        ball.jumping = false;
+                    }
+                }
+            }
+        }
         // Display clouds
        for (let i = 0; i < clouds.length; i++) {
             if (clouds[i]) {
@@ -383,13 +386,11 @@ function createGameLevelScene(level) {
                         if (updateBlockCloudPositions) {
                             moveBlocksAndClouds(-4);
                         }
-
-                        // Set the flag to false when player is not on the cloud
                         cloudMusicPlayed = false;
                     } else {
                         if (!cloudMusicPlayed) {
                             riseMusic3.play();
-                            cloudMusicPlayed = true; // Set the flag to true when the music is played
+                            cloudMusicPlayed = true; 
                         }
 
                         ball.velocityY = 0;
@@ -407,7 +408,6 @@ function createGameLevelScene(level) {
                 blocks[i].display();
 
                 if (ball.collide(blocks[i])) {
-                    // Check if the ball is above the block
                     if (ball.y + ball.height / 2 > blocks[i].position.y) {
                         ball.velocityY = 0;
                         ball.jumping = false;
@@ -416,6 +416,7 @@ function createGameLevelScene(level) {
                         if (updateBlockCloudPositions) {
                             moveBlocksAndClouds(-4);
                         }
+                        playerScore += 10;
                         removedBlocks.push({ id: blocks[i].id, block: blocks.splice(i, 1)[0] });
                     } else {
                         ball.velocityY = 0;
@@ -430,6 +431,51 @@ function createGameLevelScene(level) {
     };
 }
 
+function checkPlayerMovement() {
+    let standingOnSpecialBlocks = false;
+
+    for (let i = 0; i < blocks.length; i++) {
+        if (
+            ball.collide(blocks[i]) &&
+            ((blocks[i].id >= 33 && blocks[i].id <= 48) || (blocks[i].id >= 49 && blocks[i].id <= 64))
+        ) {
+            standingOnSpecialBlocks = true;
+            if (ball.y > prevPlayerY) {
+                movedUpwards = true;
+            }
+            prevPlayerY = ball.y; 
+        }
+    }
+    if (movedUpwards && standingOnSpecialBlocks) {
+        moveBlocksAndClouds(10);
+        
+    }
+}
+
+function moveBlocksAndClouds(dy) {
+    if (dy > 0) {
+        for (let i = 0; i < blocks.length; i++) {
+            if (blocks[i].position.y < blocks[i].originalPosition.y + 450) {
+                blocks[i].position.y += dy;
+            }
+        }
+        for (let i = 0; i < clouds.length; i++) {
+            if (clouds[i].position.y < clouds[i].originalPosition.y + 450) {
+                clouds[i].position.y += dy;
+            }
+        }
+        for (let i = 0; i < bonuses.length; i++) {
+            if (bonuses[i].position.y < bonuses[i].originalPosition.y + 450) {
+                bonuses[i].position.y += dy;
+            }
+        }
+        if (flags[0].position.y < flags[0].originalPosition.y + 450) {
+            flags[0].position.y += dy;
+        }            
+
+        floor1 += 475;
+    }
+}
 
 function refreshRemainingBlocks() {
     for (let i = 0; i < removedBlocks.length; i++) {
@@ -461,19 +507,51 @@ function keyReleased() {
 function createLeaderboardScene() {
     return function () {
         background(50, 100, 200);
-        fill(255);
+        image(IceMount, 0, 0, width, height);
+        fill(0);
         textSize(32);
         text("Leaderboard", width / 2 - 80, height / 2);
+
+        // Display the total score
+        textSize(24);
+        fill(0);
+        totalScoreText = `Total Score: ${playerScore}`;
+        text(totalScoreText, width / 2 - 100, height / 2 + 50);
+
+        // Draw "Back" button
+        fill(200);
+        let backButtonWidth = 150;
+        let backButtonHeight = 40;
+        let backButtonX = width / 2 - backButtonWidth / 2;
+        let backButtonY = height / 2 + 175;
+
+        rect(backButtonX, backButtonY, backButtonWidth, backButtonHeight);
+        fill(0);
+        textSize(20);
+        text("Back", backButtonX + 10, backButtonY + 25);
+
+        // Handle button click
+        if (
+            mouseX > backButtonX &&
+            mouseX < backButtonX + backButtonWidth &&
+            mouseY > backButtonY &&
+            mouseY < backButtonY + backButtonHeight &&
+            mouseIsPressed
+        ) {
+            backButtonPressed = true;
+        }
     };
 }
+
 function resetGame() {
     ball = createBall();
     blocks = [];
     clouds = [];
     flags = [];
+    bonuses = [];
     removedBlocks = [];
     floor1 = 600;
-    currentScene = mainMenuScene;
+    currentScene = leaderboardScene;
 
 }
 class Flag {
@@ -688,5 +766,27 @@ class Block {
 
     display() {
         image(this.blockImage, this.position.x, this.position.y, this.width, this.height);
+    }
+}
+
+class Bonus {
+    constructor(x, y, width, height) {
+        this.position = createVector(x, y);
+        this.width = width;
+        this.height = height;
+        this.bonusImage = loadImage('orange.png'); // Load bonus image
+    }
+
+    display() {
+        image(this.bonusImage, this.position.x, this.position.y, this.width, this.height);
+    }
+
+    collide(player) {
+        return (
+            player.x < this.position.x + this.width &&
+            player.x + player.width > this.position.x &&
+            player.y < this.position.y + this.height &&
+            player.y + player.height > this.position.y
+        );
     }
 }
