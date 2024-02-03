@@ -17,6 +17,7 @@ let cloudImage;
 let flagImage;
 let clouds = [];
 let flags = [];
+let Flagsound;
 let removedBlocks = [];
 let mainCharacterImage;
 let facingLeft = true;
@@ -49,6 +50,7 @@ function preload() {
     riseMusic3 = loadSound('Rise03.mp3');
     video = createVideo('icemountvedio.mp4');
     bonusSound = loadSound('Rise05.mp3');
+    Flagsound = loadSound('Upper01.mp3');
 }
 
 function setup() {
@@ -339,7 +341,7 @@ function createGameLevelScene(level) {
                     if (ball.y + ball.height / 2 > flags[i].position.y) {
                         ball.velocityY = 0;
                         ball.jumping = false;
-                
+                        Flagsound.play();
                         if (updateBlockCloudPositions) {
                             moveBlocksAndClouds(-4);
                         }
